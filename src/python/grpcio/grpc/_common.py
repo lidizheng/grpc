@@ -65,6 +65,8 @@ STATUS_CODE_TO_CYGRPC_STATUS_CODE = {
 def encode(s):
     if isinstance(s, bytes):
         return s
+    if isinstance(s, unicode):
+        return s.encode('utf-8')
     else:
         return s.encode('ascii')
 
