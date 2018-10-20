@@ -42,7 +42,7 @@ class _MethodHandler(grpc.RpcMethodHandler):
         self.unary_stream = None
         self.stream_unary = None
         self.stream_stream = None
-    
+
     def unary_unary(self, _, servicer_context):
         servicer_context.set_code(grpc.StatusCode.UNKNOWN)
         servicer_context.set_details(_UTF_8_ERROR_MESSAGE)
