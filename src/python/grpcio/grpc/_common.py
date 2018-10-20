@@ -73,7 +73,10 @@ def encode(s):
 
 def decode(b):
     if isinstance(b, str):
-        return b
+        try:
+            return b.decode('utf-8')
+        except UnicodeDecodeError:
+            return b
     else:
         try:
             return b.decode('utf8')

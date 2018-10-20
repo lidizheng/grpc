@@ -20,8 +20,11 @@ import weakref
 import grpc
 from grpc import _channel
 
-from tests.unit import test_common
-from tests.unit.framework.common import test_constants
+from grpc.tests.unit import test_common
+from grpc.tests.unit.framework.common import test_constants
+
+# _UTF_8_ERROR_MESSAGE = u'é'
+_UTF_8_ERROR_MESSAGE = u'烫'
 
 _REQUEST = b'\x00\x00\x00'
 _RESPONSE = b'\x00\x00\x00'
@@ -30,10 +33,19 @@ _UNARY_UNARY = '/test/UnaryUnary'
 
 
 class _MethodHandler(grpc.RpcMethodHandler):
+
+    def __init__(self, request_streaming=None, response_streaming=None):
+        self.request_streaming = request_streaming
+        self.response_streaming = response_streaming
+        self.request_deserializer = None
+        self.response_serializer = None
+        self.unary_stream = None
+        self.stream_unary = None
+        self.stream_stream = None
     
     def unary_unary(self, _, servicer_context):
         servicer_context.set_code(grpc.StatusCode.UNKNOWN)
-        servicer_context.set_details(u'é')
+        servicer_context.set_details(_UTF_8_ERROR_MESSAGE)
         return _RESPONSE
 
 
@@ -61,7 +73,11 @@ class ErrorMessageEncodingTest(unittest.TestCase):
 
     def testMessageEncoding(self):
         multi_callable = self._channel.unary_unary(_UNARY_UNARY)
-        _, call = multi_callable.with_call(_REQUEST)
+        with self.assertRaises(grpc.RpcError) as cm:
+            multi_callable(_REQUEST)
+
+        self.assertEqual(cm.exception.code(), grpc.StatusCode.UNKNOWN)
+        self.assertEqual(cm.exception.details(), _UTF_8_ERROR_MESSAGE)
 
 
 if __name__ == '__main__':
