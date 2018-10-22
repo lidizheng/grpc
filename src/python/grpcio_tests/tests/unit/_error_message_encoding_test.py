@@ -18,13 +18,11 @@ import unittest
 import weakref
 
 import grpc
-from grpc import _channel
 
-from grpc.tests.unit import test_common
-from grpc.tests.unit.framework.common import test_constants
+from tests.unit import test_common
+from tests.unit.framework.common import test_constants
 
-# _UTF_8_ERROR_MESSAGE = u'é'
-_UTF_8_ERROR_MESSAGE = u'烫'
+_UTF_8_ERROR_MESSAGE = u'é'
 
 _REQUEST = b'\x00\x00\x00'
 _RESPONSE = b'\x00\x00\x00'
