@@ -72,17 +72,19 @@ def encode(s):
 
 
 def decode(b):
-    if isinstance(b, str):
+    # Possibilities based on language features
+    #   Python 2: str, str (byte string), unicode
+    #   Python 3: str, bytes
+    if (six.PY2 and isinstance(b, str)) or (six.PY3 and isinstance(b, bytes)):
         try:
+            # ASCII strings can be decoded here
             return b.decode('utf-8')
         except UnicodeDecodeError:
-            return b
-    else:
-        try:
-            return b.decode('utf8')
-        except UnicodeDecodeError:
             _LOGGER.exception('Invalid encoding on %s', b)
-            return b.decode('latin1')
+            return b.decode('latin-1')
+    elif (six.PY2 and isinstance(b, unicode)) or (six.PY3 and
+                                                  isinstance(b, str)):
+        return b
 
 
 def _transform(message, transformer, exception_message):
