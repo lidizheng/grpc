@@ -1,4 +1,3 @@
-# -*- coding=utf-8 -*-
 # Copyright 2018 gRPC authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +21,7 @@ import grpc
 from tests.unit import test_common
 from tests.unit.framework.common import test_constants
 
-_UTF_8_ERROR_MESSAGE = u'é'
+_UTF_8_ERROR_MESSAGE = b'\xc3\xa9'.decode('utf-8')
 
 _REQUEST = b'\x00\x00\x00'
 _RESPONSE = b'\x00\x00\x00'
@@ -75,8 +74,7 @@ class ErrorMessageEncodingTest(unittest.TestCase):
             multi_callable(_REQUEST)
 
         self.assertEqual(cm.exception.code(), grpc.StatusCode.UNKNOWN)
-        self.assertEqual(cm.exception.details(),
-                         _UTF_8_ERROR_MESSAGE.encode('utf-8'))
+        self.assertEqual(cm.exception.details(), _UTF_8_ERROR_MESSAGE)
 
 
 if __name__ == '__main__':

@@ -74,15 +74,18 @@ def encode(s):
         _LOGGER.exception('Cannot encode %s', s)
         return s
 
+
 def decode(b):
-    if isinstance(b, str):
+    if (six.PY2 and isinstance(b, unicode)) or (six.PY3 and isinstance(b, str)):
         return b
     else:
-        try:
-            return b.decode('utf8')
-        except UnicodeDecodeError:
-            _LOGGER.exception('Invalid encoding on %s', b)
-            return b.decode('latin1')
+        for encoding in ['utf8', 'latin1']:
+            try:
+                return b.decode(encoding)
+            except UnicodeDecodeError:
+                pass
+        _LOGGER.exception('Invalid encoding on %s', b)
+        return b
 
 
 def _transform(message, transformer, exception_message):
