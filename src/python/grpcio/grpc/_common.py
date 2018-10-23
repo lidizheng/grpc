@@ -62,7 +62,7 @@ STATUS_CODE_TO_CYGRPC_STATUS_CODE = {
 }
 
 
-def encode(s):
+def encode(s):  #pylint: disable=inconsistent-return-statements
     if isinstance(s, bytes) or (six.PY2 and isinstance(s, str)):
         return s
     else:
@@ -75,7 +75,7 @@ def encode(s):
         return s
 
 
-def decode(b):
+def decode(b):  #pylint: disable=inconsistent-return-statements
     if (six.PY2 and isinstance(b, unicode)) or (six.PY3 and isinstance(b, str)):
         return b
     else:
