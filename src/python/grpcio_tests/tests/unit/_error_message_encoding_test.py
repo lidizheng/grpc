@@ -75,7 +75,7 @@ class ErrorMessageEncodingTest(unittest.TestCase):
             multi_callable(_REQUEST)
 
         self.assertEqual(cm.exception.code(), grpc.StatusCode.UNKNOWN)
-        self.assertEqual(cm.exception.details(), _UTF_8_ERROR_MESSAGE)
+        self.assertEqual(cm.exception.details(), _UTF_8_ERROR_MESSAGE.encode('utf-8'))
 
 
 if __name__ == '__main__':
