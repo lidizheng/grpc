@@ -62,30 +62,17 @@ STATUS_CODE_TO_CYGRPC_STATUS_CODE = {
 }
 
 
-def encode(s):  #pylint: disable=inconsistent-return-statements
-    if isinstance(s, bytes) or (six.PY2 and isinstance(s, str)):
+def encode(s):
+    if isinstance(s, bytes):
         return s
     else:
-        for encoding in ['utf8', 'latin1']:
-            try:
-                return s.encode(encoding)
-            except UnicodeEncodeError:
-                pass
-        _LOGGER.exception('Cannot encode %s', s)
-        return s
+        return s.encode('utf8')
 
 
-def decode(b):  #pylint: disable=inconsistent-return-statements
-    if (six.PY2 and isinstance(b, unicode)) or (six.PY3 and isinstance(b, str)):
-        return b
-    else:
-        for encoding in ['utf8', 'latin1']:
-            try:
-                return b.decode(encoding)
-            except UnicodeDecodeError:
-                pass
-        _LOGGER.exception('Invalid encoding on %s', b)
-        return b
+def decode(b):
+    if isinstance(b, bytes):
+        return b.decode('utf-8', 'replace')
+    return b
 
 
 def _transform(message, transformer, exception_message):

@@ -21,7 +21,11 @@ import grpc
 from tests.unit import test_common
 from tests.unit.framework.common import test_constants
 
-_UTF_8_ERROR_MESSAGE = b'\xc3\xa9'.decode('utf-8')
+_UNICODE_ERROR_MESSAGES = [
+    b'\xe2\x80\x9d'.decode('utf-8'),
+    b'abc\x80\xd0\xaf'.decode('latin-1'),
+    b'\xc3\xa9'.decode('utf-8'),
+]
 
 _REQUEST = b'\x00\x00\x00'
 _RESPONSE = b'\x00\x00\x00'
@@ -40,9 +44,9 @@ class _MethodHandler(grpc.RpcMethodHandler):
         self.stream_unary = None
         self.stream_stream = None
 
-    def unary_unary(self, _, servicer_context):
+    def unary_unary(self, request, servicer_context):
         servicer_context.set_code(grpc.StatusCode.UNKNOWN)
-        servicer_context.set_details(_UTF_8_ERROR_MESSAGE)
+        servicer_context.set_details(request.decode('utf-8'))
         return _RESPONSE
 
 
@@ -69,12 +73,13 @@ class ErrorMessageEncodingTest(unittest.TestCase):
         self._server.stop(0)
 
     def testMessageEncoding(self):
-        multi_callable = self._channel.unary_unary(_UNARY_UNARY)
-        with self.assertRaises(grpc.RpcError) as cm:
-            multi_callable(_REQUEST)
+        for message in _UNICODE_ERROR_MESSAGES:
+            multi_callable = self._channel.unary_unary(_UNARY_UNARY)
+            with self.assertRaises(grpc.RpcError) as cm:
+                multi_callable(message.encode('utf-8'))
 
-        self.assertEqual(cm.exception.code(), grpc.StatusCode.UNKNOWN)
-        self.assertEqual(cm.exception.details(), _UTF_8_ERROR_MESSAGE)
+            self.assertEqual(cm.exception.code(), grpc.StatusCode.UNKNOWN)
+            self.assertEqual(cm.exception.details(), message)
 
 
 if __name__ == '__main__':
