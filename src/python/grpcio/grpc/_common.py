@@ -63,13 +63,16 @@ STATUS_CODE_TO_CYGRPC_STATUS_CODE = {
 
 
 def encode(s):
-    if isinstance(s, bytes):
+    if isinstance(s, bytes) or (six.PY2 and isinstance(s, str)):
         return s
-    elif six.PY2 and isinstance(s, unicode):
-        return s.encode('utf-8')
     else:
-        return s.encode('ascii')
-
+        for encoding in ['utf8', 'latin1']:
+            try:
+                return s.encode(encoding)
+            except UnicodeEncodeError:
+                pass
+        _LOGGER.exception('Cannot encode %s', s)
+        return s
 
 def decode(b):
     if isinstance(b, str):
