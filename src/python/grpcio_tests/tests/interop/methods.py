@@ -458,7 +458,8 @@ def _per_rpc_creds(stub, args):
 
 
 def _special_status_message(stub, args):
-    details = b'\t\ntest with whitespace\r\nand Unicode BMP \xe2\x98\xba and non-BMP \xf0\x9f\x98\x88\t\n'.decode('utf-8')
+    details = b'\t\ntest with whitespace\r\nand Unicode BMP \xe2\x98\xba and non-BMP \xf0\x9f\x98\x88\t\n'.decode(
+        'utf-8')
     code = 2
     status = grpc.StatusCode.UNKNOWN  # code = 2
 
