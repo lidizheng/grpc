@@ -48,11 +48,13 @@ class Future(six.with_metaclass(abc.ABCMeta)):
         Returns:
             bool:
             Returns True if the computation was canceled.
+
             Returns False under all other circumstances, for example:
+
             1. computation has begun and could not be canceled.
             2. computation has finished
             3. computation is scheduled for execution and it is impossible
-              to determine its state without blocking.
+            to determine its state without blocking.
         """
         raise NotImplementedError()
 
@@ -66,7 +68,9 @@ class Future(six.with_metaclass(abc.ABCMeta)):
             bool:
             Returns True if the computation was cancelled before its result became
             available.
-            False under all other circumstances, for example:
+
+            Returns False under all other circumstances, for example:
+
             1. computation was not cancelled.
             2. computation's result is available.
         """
@@ -79,9 +83,9 @@ class Future(six.with_metaclass(abc.ABCMeta)):
         This method does not block.
 
         Returns:
-            bool:
             Returns True if the computation is scheduled for execution or
             currently executing.
+
             Returns False if the computation already executed or was cancelled.
         """
         raise NotImplementedError()
@@ -450,8 +454,7 @@ class StreamUnaryClientInterceptor(six.with_metaclass(abc.ABCMeta)):
             actual RPC on the underlying Channel. It is the interceptor's
             responsibility to call it if it decides to move the RPC forward.
             The interceptor can use
-            `response_future = continuation(client_call_details,
-                                            request_iterator)`
+            `response_future = continuation(client_call_details, request_iterator)`
             to continue with the RPC. `continuation` returns an object that is
             both a Call for the RPC and a Future. In the event of RPC completion,
             the return Call-Future's result value will be the response message
@@ -462,11 +465,11 @@ class StreamUnaryClientInterceptor(six.with_metaclass(abc.ABCMeta)):
           request_iterator: An iterator that yields request values for the RPC.
 
         Returns:
-            An object that is both a Call for the RPC and a Future.
-            In the event of RPC completion, the return Call-Future's
-            result value will be the response message of the RPC.
-            Should the event terminate with non-OK status, the returned
-            Call-Future's exception value will be an RpcError.
+          An object that is both a Call for the RPC and a Future.
+          In the event of RPC completion, the return Call-Future's
+          result value will be the response message of the RPC.
+          Should the event terminate with non-OK status, the returned
+          Call-Future's exception value will be an RpcError.
         """
         raise NotImplementedError()
 
@@ -482,13 +485,13 @@ class StreamStreamClientInterceptor(six.with_metaclass(abc.ABCMeta)):
                                 request_iterator):
         """Intercepts a stream-stream invocation.
 
+        Args:
           continuation: A function that proceeds with the invocation by
             executing the next interceptor in chain or invoking the
             actual RPC on the underlying Channel. It is the interceptor's
             responsibility to call it if it decides to move the RPC forward.
             The interceptor can use
-            `response_iterator = continuation(client_call_details,
-                                              request_iterator)`
+            `response_iterator = continuation(client_call_details, request_iterator)`
             to continue with the RPC. `continuation` returns an object that is
             both a Call for the RPC and an iterator for response values.
             Drawing response values from the returned Call-iterator may
@@ -499,10 +502,10 @@ class StreamStreamClientInterceptor(six.with_metaclass(abc.ABCMeta)):
           request_iterator: An iterator that yields request values for the RPC.
 
         Returns:
-            An object that is both a Call for the RPC and an iterator of
-            response values. Drawing response values from the returned
-            Call-iterator may raise RpcError indicating termination of
-            the RPC with non-OK status.
+          An object that is both a Call for the RPC and an iterator of
+          response values. Drawing response values from the returned
+          Call-iterator may raise RpcError indicating termination of
+          the RPC with non-OK status.
         """
         raise NotImplementedError()
 
@@ -972,8 +975,7 @@ class ServicerContext(six.with_metaclass(abc.ABCMeta, RpcContext)):
         """Gets one or more peer identity(s).
 
         Equivalent to
-        servicer_context.auth_context().get(
-            servicer_context.peer_identity_key())
+        servicer_context.auth_context().get(servicer_context.peer_identity_key())
 
         Returns:
           An iterable of the identities, or None if the call is not
