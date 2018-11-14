@@ -25,15 +25,7 @@
   <%include file="../../php_deps.include"/>
   <%include file="../../ruby_deps.include"/>
   <%include file="../../apt_get_python_27.include"/>
-
-  # Compile Python 3.7
-  RUN apt-get install -y libssl-dev libffi-dev openssl
-  RUN wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tgz
-  RUN tar xzf Python-3.7.1.tgz
-  RUN cd Python-3.7.1 \
-      && ./configure --enable-optimizations --with-ssl-default-suites=openssl \
-      && make install \
-      && cd ..
+  <%include file="../../compile_python_37.include"/>
 
   # Install coverage for Python test coverage reporting
   RUN pip install coverage

@@ -141,12 +141,16 @@ RUN /bin/bash -l -c "gem install bundler --no-ri --no-rdoc"
 RUN apt-get update && apt-get install -y python2.7 python-all-dev
 RUN curl https://bootstrap.pypa.io/get-pip.py | python2.7
 
-
 # Compile Python 3.7
-RUN apt-get install -y libssl-dev libffi-dev openssl
+RUN wget https://www.openssl.org/source/openssl-1.1.1.tar.gz
+RUN tar xzf openssl-1.1.1.tar.gz
+RUN cd openssl-1.1.1     && ./config --prefix=/opt/openssl --openssldir=/usr/local/ssl
+    && make     && make install     && cd ..
+RUN apt-get install -y libffi-dev
 RUN wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tgz
 RUN tar xzf Python-3.7.1.tgz
-RUN cd Python-3.7.1     && ./configure --enable-optimizations --with-ssl-default-suites=openssl     && make install     && cd ..
+RUN cd Python-3.7.1     && ./configure             --enable-optimizations             --with-openssl=/opt/openssl     && make     && make install     && cd ..
+
 
 # Install coverage for Python test coverage reporting
 RUN pip install coverage
