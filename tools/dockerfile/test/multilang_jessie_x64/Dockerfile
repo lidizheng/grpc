@@ -143,7 +143,7 @@ RUN curl https://bootstrap.pypa.io/get-pip.py | python2.7
 
 
 # Compile Python 3.7
-RUN apt install -y libssl-dev libffi-dev openssl
+RUN apt-get install -y libssl-dev libffi-dev openssl
 RUN wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tgz
 RUN tar xzf Python-3.7.1.tgz
 RUN cd Python-3.7.1     && ./configure --enable-optimizations --with-ssl-default-suites=openssl     && make install     && cd ..
