@@ -142,12 +142,11 @@ RUN apt-get update && apt-get install -y python2.7 python-all-dev
 RUN curl https://bootstrap.pypa.io/get-pip.py | python2.7
 
 
+# Compile Python 3.7
+RUN apt install -y libssl-dev libffi-dev openssl
 RUN wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tgz
 RUN tar xzf Python-3.7.1.tgz
-RUN cd Python-3.7.1 && ./configure --enable-optimizations && make altinstall && cd ..
-# RUN apt-get update && apt-get -t testing install -y python3.7 python3-all-dev
-RUN curl https://bootstrap.pypa.io/get-pip.py | python3.7
-# RUN python3.7 -m pip install virtualenv
+RUN cd Python-3.7.1     && ./configure --enable-optimizations --with-ssl-default-suites=openssl     && make install     && cd ..
 
 # Install coverage for Python test coverage reporting
 RUN pip install coverage
