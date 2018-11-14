@@ -24,17 +24,15 @@
   <%include file="../../node_deps.include"/>
   <%include file="../../php_deps.include"/>
   <%include file="../../ruby_deps.include"/>
-  # lidiz: There is a conflict of binutils while installing different
-  # version of Python, I remove it here to enable it to be upgraded later.
-  # libc6-dev : Breaks: binutils (< 2.26) but 2.25-5+deb8u1 is to be installed
-  RUN apt-get remove -y binutils
   <%include file="../../apt_get_python_27.include"/>
-  # Install Python 3.7 with pip and virtualenv
-  <%include file="../../debian_testing_repo.include"/>
-  RUN apt-get update && apt-get -t testing install -y python3.7 python3-all-dev
-  RUN curl https://bootstrap.pypa.io/get-pip.py | python3.7
-  RUN python3.7 -m pip install virtualenv
   
+  RUN wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tgz
+  RUN tar xzf Python-3.7.1.tgz
+  RUN cd Python-3.7.1 && ./configure --enable-optimizations && make altinstall && cd ..
+  # RUN apt-get update && apt-get -t testing install -y python3.7 python3-all-dev
+  RUN curl https://bootstrap.pypa.io/get-pip.py | python3.7
+  # RUN python3.7 -m pip install virtualenv
+
   # Install coverage for Python test coverage reporting
   RUN pip install coverage
   ENV PATH ~/.local/bin:$PATH

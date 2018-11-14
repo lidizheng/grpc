@@ -137,22 +137,17 @@ RUN /bin/bash -l -c "echo 'export PATH=/usr/local/rvm/bin:$PATH' >> ~/.bashrc"
 RUN /bin/bash -l -c "echo 'rvm --default use ruby-2.1' >> ~/.bashrc"
 RUN /bin/bash -l -c "gem install bundler --no-ri --no-rdoc"
 
-# lidiz: There is a conflict of binutils while installing different
-# version of Python, I remove it here to enable it to be upgraded later.
-# libc6-dev : Breaks: binutils (< 2.26) but 2.25-5+deb8u1 is to be installed
-RUN apt-get remove -y binutils
 # Install Python 2.7
 RUN apt-get update && apt-get install -y python2.7 python-all-dev
 RUN curl https://bootstrap.pypa.io/get-pip.py | python2.7
 
-# Install Python 3.7 with pip and virtualenv
-# Add Debian 'testing' repository
-RUN echo 'deb http://ftp.de.debian.org/debian testing main' >> /etc/apt/sources.list
-RUN echo 'APT::Default-Release "stable";' | tee -a /etc/apt/apt.conf.d/00local
 
-RUN apt-get update && apt-get -t testing install -y python3.7 python3-all-dev
+RUN wget https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tgz
+RUN tar xzf Python-3.7.1.tgz
+RUN cd Python-3.7.1 && ./configure --enable-optimizations && make altinstall && cd ..
+# RUN apt-get update && apt-get -t testing install -y python3.7 python3-all-dev
 RUN curl https://bootstrap.pypa.io/get-pip.py | python3.7
-RUN python3.7 -m pip install virtualenv
+# RUN python3.7 -m pip install virtualenv
 
 # Install coverage for Python test coverage reporting
 RUN pip install coverage
