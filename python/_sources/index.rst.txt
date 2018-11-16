@@ -9,7 +9,7 @@ API Reference
 .. toctree::
    :caption: Contents:
 
-   grpc
+   api
    grpc_health_checking
    grpc_reflection
    grpc_testing
