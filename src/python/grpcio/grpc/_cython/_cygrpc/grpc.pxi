@@ -56,6 +56,7 @@ cdef extern from "grpc/grpc.h":
   grpc_slice grpc_slice_from_copied_string(const char *source) nogil
   grpc_slice grpc_slice_from_copied_buffer(const char *source, size_t len) nogil
   grpc_slice grpc_slice_copy(grpc_slice s) nogil
+  int grpc_slice_eq(grpc_slice a, grpc_slice b) nogil
 
   # Declare functions for function-like macros (because Cython)...
   void *grpc_slice_start_ptr "GRPC_SLICE_START_PTR" (grpc_slice s) nogil
@@ -331,6 +332,9 @@ cdef extern from "grpc/grpc.h":
     const grpc_completion_queue_factory* factory,
     const grpc_completion_queue_attributes* attr, void* reserved) nogil
   grpc_completion_queue *grpc_completion_queue_create_for_next(void *reserved) nogil
+  grpc_completion_queue *grpc_completion_queue_create_for_callback(
+    grpc_experimental_completion_queue_functor* shutdown_callback,
+    void* reserved) nogil
 
   grpc_event grpc_completion_queue_next(grpc_completion_queue *cq,
                                         gpr_timespec deadline,
@@ -610,3 +614,29 @@ cdef extern from "grpc/compression.h":
   int grpc_compression_options_is_algorithm_enabled(
       const grpc_compression_options *opts,
       grpc_compression_algorithm algorithm) nogil
+
+  ctypedef struct grpc_experimental_completion_queue_functor:
+    void (*functor_run)(grpc_experimental_completion_queue_functor*, int)
+
+  ctypedef enum grpc_server_register_method_payload_handling:
+    GRPC_SRM_PAYLOAD_NONE
+    GRPC_SRM_PAYLOAD_READ_INITIAL_BYTE_BUFFER
+  
+  void* grpc_server_register_method(
+    grpc_server* server, const char* method, const char* host,
+    grpc_server_register_method_payload_handling payload_handling,
+    uint32_t flags)
+  
+  grpc_call_error grpc_server_request_registered_call(
+    grpc_server* server, void* registered_method, grpc_call** call,
+    gpr_timespec* deadline, grpc_metadata_array* request_metadata,
+    grpc_byte_buffer** optional_payload,
+    grpc_completion_queue* cq_bound_to_call,
+    grpc_completion_queue* cq_for_notification, void* tag_new)
+
+  grpc_completion_queue* grpc_completion_queue_create_for_pluck(
+    void* reserved)
+
+  grpc_event grpc_completion_queue_pluck(grpc_completion_queue* cq,
+                                               void* tag, gpr_timespec deadline,
+                                               void* reserved)

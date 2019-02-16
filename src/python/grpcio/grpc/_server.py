@@ -869,6 +869,7 @@ class _Server(grpc.Server):
 
 def create_server(thread_pool, generic_rpc_handlers, interceptors, options,
                   maximum_concurrent_rpcs):
-    _validate_generic_rpc_handlers(generic_rpc_handlers)
-    return _Server(thread_pool, generic_rpc_handlers, interceptors, options,
-                   maximum_concurrent_rpcs)
+    # _validate_generic_rpc_handlers(generic_rpc_handlers)
+    return cygrpc.NewServer()
+    # return _Server(thread_pool, generic_rpc_handlers, interceptors, options,
+    #                maximum_concurrent_rpcs)

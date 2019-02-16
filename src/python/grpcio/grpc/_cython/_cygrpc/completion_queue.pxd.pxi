@@ -26,3 +26,5 @@ cdef class CompletionQueue:
   cdef bint is_shutdown
 
   cdef _interpret_event(self, grpc_event c_event)
+  cdef grpc_event next(self) except *
+

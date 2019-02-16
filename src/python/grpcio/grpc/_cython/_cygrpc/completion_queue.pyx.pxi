@@ -94,6 +94,9 @@ cdef class CompletionQueue:
   def poll(self, deadline=None):
     return self._interpret_event(_next(self.c_completion_queue, deadline))
 
+  cdef grpc_event next(self) except *:
+    return _next(self.c_completion_queue, None)
+
   def shutdown(self):
     with nogil:
       grpc_completion_queue_shutdown(self.c_completion_queue)
