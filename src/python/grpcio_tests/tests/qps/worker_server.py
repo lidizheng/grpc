@@ -19,6 +19,7 @@ import time
 
 from concurrent import futures
 import grpc
+from grpc._cython import cygrpc
 from src.proto.grpc.testing import control_pb2
 from src.proto.grpc.testing import benchmark_service_pb2_grpc
 from src.proto.grpc.testing import worker_service_pb2_grpc
@@ -70,7 +71,7 @@ class WorkerServer(worker_service_pb2_grpc.WorkerServiceServicer):
             server_threads = multiprocessing.cpu_count() * 5
         else:
             server_threads = config.async_server_threads
-        server = test_common.test_server(max_workers=server_threads)
+        server = cygrpc.NewServer()
         if config.server_type == control_pb2.ASYNC_SERVER:
             servicer = benchmark_server.BenchmarkServer()
             benchmark_service_pb2_grpc.add_BenchmarkServiceServicer_to_server(
