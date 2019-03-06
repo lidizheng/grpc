@@ -25,6 +25,8 @@ echo 'DOCKER_OPTS="${DOCKER_OPTS} --graph=/tmpfs/docker"' | sudo tee --append /e
 echo 'DOCKER_OPTS="${DOCKER_OPTS} --registry-mirror=https://mirror.gcr.io"' | sudo tee --append /etc/default/docker
 sudo service docker restart
 
+time python2.7 -m pip install wheel --user
+
 # Download Docker images from DockerHub
 export DOCKERHUB_ORGANIZATION=grpctesting
 
