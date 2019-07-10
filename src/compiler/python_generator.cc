@@ -97,7 +97,7 @@ bool PrivateGenerator::PrintBetaServicer(const grpc_generator::Service* service,
   out->Print("\n\n");
   out->Print(service_dict, "class Beta$Service$Servicer(object):\n");
   {
-    IndentScope raii_class_indent(out);
+    PrivateGenerator::IndentScope raii_class_indent(out);
     out->Print(
         "\"\"\"The Beta API is deprecated for 0.15.0 and later.\n"
         "\nIt is recommended to use the GA API (classes and functions in this\n"
@@ -116,7 +116,7 @@ bool PrivateGenerator::PrintBetaServicer(const grpc_generator::Service* service,
       method_dict["ArgName"] = arg_name;
       out->Print(method_dict, "def $Method$(self, $ArgName$, context):\n");
       {
-        IndentScope raii_method_indent(out);
+        PrivateGenerator::IndentScope raii_method_indent(out);
         StringVector method_comments = method->GetAllComments();
         PrintAllComments(method_comments, out);
         out->Print("context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)\n");
@@ -133,7 +133,7 @@ bool PrivateGenerator::PrintBetaStub(const grpc_generator::Service* service,
   out->Print("\n\n");
   out->Print(service_dict, "class Beta$Service$Stub(object):\n");
   {
-    IndentScope raii_class_indent(out);
+    PrivateGenerator::IndentScope raii_class_indent(out);
     out->Print(
         "\"\"\"The Beta API is deprecated for 0.15.0 and later.\n"
         "\nIt is recommended to use the GA API (classes and functions in this\n"
@@ -154,7 +154,7 @@ bool PrivateGenerator::PrintBetaStub(const grpc_generator::Service* service,
                  "def $Method$(self, $ArgName$, timeout, metadata=None, "
                  "with_call=False, protocol_options=None):\n");
       {
-        IndentScope raii_method_indent(out);
+        PrivateGenerator::IndentScope raii_method_indent(out);
         StringVector method_comments = method->GetAllComments();
         PrintAllComments(method_comments, out);
         out->Print("raise NotImplementedError()\n");
@@ -177,7 +177,7 @@ bool PrivateGenerator::PrintBetaServerFactory(
              "def beta_create_$Service$_server(servicer, pool=None, "
              "pool_size=None, default_timeout=None, maximum_timeout=None):\n");
   {
-    IndentScope raii_create_server_indent(out);
+    PrivateGenerator::IndentScope raii_create_server_indent(out);
     out->Print(
         "\"\"\"The Beta API is deprecated for 0.15.0 and later.\n"
         "\nIt is recommended to use the GA API (classes and functions in this\n"
@@ -225,7 +225,7 @@ bool PrivateGenerator::PrintBetaServerFactory(
       method_dict["MethodName"] = name_and_input_module_class_pair->first;
       method_dict["InputTypeModuleAndClass"] =
           name_and_input_module_class_pair->second;
-      IndentScope raii_indent(out);
+      PrivateGenerator::IndentScope raii_indent(out);
       out->Print(method_dict,
                  "(\'$PackageQualifiedServiceName$\', \'$MethodName$\'): "
                  "$InputTypeModuleAndClass$.FromString,\n");
@@ -240,7 +240,7 @@ bool PrivateGenerator::PrintBetaServerFactory(
       method_dict["MethodName"] = name_and_output_module_class_pair->first;
       method_dict["OutputTypeModuleAndClass"] =
           name_and_output_module_class_pair->second;
-      IndentScope raii_indent(out);
+      PrivateGenerator::IndentScope raii_indent(out);
       out->Print(method_dict,
                  "(\'$PackageQualifiedServiceName$\', \'$MethodName$\'): "
                  "$OutputTypeModuleAndClass$.SerializeToString,\n");
@@ -254,7 +254,7 @@ bool PrivateGenerator::PrintBetaServerFactory(
          name_and_implementation_constructor++) {
       method_dict["Method"] = name_and_implementation_constructor->first;
       method_dict["Constructor"] = name_and_implementation_constructor->second;
-      IndentScope raii_descriptions_indent(out);
+      PrivateGenerator::IndentScope raii_descriptions_indent(out);
       const grpc::string method_name =
           name_and_implementation_constructor->first;
       out->Print(method_dict,
@@ -286,7 +286,7 @@ bool PrivateGenerator::PrintBetaStubFactory(
              "def beta_create_$Service$_stub(channel, host=None,"
              " metadata_transformer=None, pool=None, pool_size=None):\n");
   {
-    IndentScope raii_create_server_indent(out);
+    PrivateGenerator::IndentScope raii_create_server_indent(out);
     out->Print(
         "\"\"\"The Beta API is deprecated for 0.15.0 and later.\n"
         "\nIt is recommended to use the GA API (classes and functions in this\n"
@@ -333,7 +333,7 @@ bool PrivateGenerator::PrintBetaStubFactory(
       method_dict["MethodName"] = name_and_input_module_class_pair->first;
       method_dict["InputTypeModuleAndClass"] =
           name_and_input_module_class_pair->second;
-      IndentScope raii_indent(out);
+      PrivateGenerator::IndentScope raii_indent(out);
       out->Print(method_dict,
                  "(\'$PackageQualifiedServiceName$\', \'$MethodName$\'): "
                  "$InputTypeModuleAndClass$.SerializeToString,\n");
@@ -348,7 +348,7 @@ bool PrivateGenerator::PrintBetaStubFactory(
       method_dict["MethodName"] = name_and_output_module_class_pair->first;
       method_dict["OutputTypeModuleAndClass"] =
           name_and_output_module_class_pair->second;
-      IndentScope raii_indent(out);
+      PrivateGenerator::IndentScope raii_indent(out);
       out->Print(method_dict,
                  "(\'$PackageQualifiedServiceName$\', \'$MethodName$\'): "
                  "$OutputTypeModuleAndClass$.FromString,\n");
@@ -361,7 +361,7 @@ bool PrivateGenerator::PrintBetaStubFactory(
          name_and_cardinality++) {
       method_dict["Method"] = name_and_cardinality->first;
       method_dict["Cardinality"] = name_and_cardinality->second;
-      IndentScope raii_descriptions_indent(out);
+      PrivateGenerator::IndentScope raii_descriptions_indent(out);
       out->Print(method_dict,
                  "\'$Method$\': cardinality.Cardinality.$Cardinality$,\n");
     }
@@ -388,18 +388,18 @@ bool PrivateGenerator::PrintStub(
   out->Print("\n\n");
   out->Print(dict, "class $Service$Stub(object):\n");
   {
-    IndentScope raii_class_indent(out);
+    PrivateGenerator::IndentScope raii_class_indent(out);
     StringVector service_comments = service->GetAllComments();
     PrintAllComments(service_comments, out);
     out->Print("\n");
     out->Print("def __init__(self, channel):\n");
     {
-      IndentScope raii_init_indent(out);
+      PrivateGenerator::IndentScope raii_init_indent(out);
       out->Print("\"\"\"Constructor.\n");
       out->Print("\n");
       out->Print("Args:\n");
       {
-        IndentScope raii_args_indent(out);
+        PrivateGenerator::IndentScope raii_args_indent(out);
         out->Print("channel: A grpc.Channel.\n");
       }
       out->Print("\"\"\"\n");
@@ -432,8 +432,8 @@ bool PrivateGenerator::PrintStub(
               package_qualified_service_name;
           method_dict["RequestModuleAndClass"] = request_module_and_class;
           method_dict["ResponseModuleAndClass"] = response_module_and_class;
-          IndentScope raii_first_attribute_indent(out);
-          IndentScope raii_second_attribute_indent(out);
+          PrivateGenerator::IndentScope raii_first_attribute_indent(out);
+          PrivateGenerator::IndentScope raii_second_attribute_indent(out);
           out->Print(method_dict, "'/$PackageQualifiedService$/$Method$',\n");
           out->Print(method_dict,
                      "request_serializer=$RequestModuleAndClass$."
@@ -456,7 +456,7 @@ bool PrivateGenerator::PrintServicer(const grpc_generator::Service* service,
   out->Print("\n\n");
   out->Print(service_dict, "class $Service$Servicer(object):\n");
   {
-    IndentScope raii_class_indent(out);
+    PrivateGenerator::IndentScope raii_class_indent(out);
     StringVector service_comments = service->GetAllComments();
     PrintAllComments(service_comments, out);
     for (int i = 0; i < service->method_count(); ++i) {
@@ -469,7 +469,7 @@ bool PrivateGenerator::PrintServicer(const grpc_generator::Service* service,
       out->Print("\n");
       out->Print(method_dict, "def $Method$(self, $ArgName$, context):\n");
       {
-        IndentScope raii_method_indent(out);
+        PrivateGenerator::IndentScope raii_method_indent(out);
         StringVector method_comments = method->GetAllComments();
         PrintAllComments(method_comments, out);
         out->Print("context.set_code(grpc.StatusCode.UNIMPLEMENTED)\n");
@@ -490,11 +490,11 @@ bool PrivateGenerator::PrintAddServicerToServer(
   out->Print(service_dict,
              "def add_$Service$Servicer_to_server(servicer, server):\n");
   {
-    IndentScope raii_class_indent(out);
+    PrivateGenerator::IndentScope raii_class_indent(out);
     out->Print("rpc_method_handlers = {\n");
     {
-      IndentScope raii_dict_first_indent(out);
-      IndentScope raii_dict_second_indent(out);
+      PrivateGenerator::IndentScope raii_dict_first_indent(out);
+      PrivateGenerator::IndentScope raii_dict_second_indent(out);
       for (int i = 0; i < service->method_count(); ++i) {
         auto method = service->method(i);
         grpc::string method_handler_constructor =
@@ -523,8 +523,8 @@ bool PrivateGenerator::PrintAddServicerToServer(
         out->Print(method_dict,
                    "'$Method$': grpc.$MethodHandlerConstructor$(\n");
         {
-          IndentScope raii_call_first_indent(out);
-          IndentScope raii_call_second_indent(out);
+          PrivateGenerator::IndentScope raii_call_first_indent(out);
+          PrivateGenerator::IndentScope raii_call_second_indent(out);
           out->Print(method_dict, "servicer.$Method$,\n");
           out->Print(
               method_dict,
@@ -542,8 +542,8 @@ bool PrivateGenerator::PrintAddServicerToServer(
     out->Print("}\n");
     out->Print("generic_handler = grpc.method_handlers_generic_handler(\n");
     {
-      IndentScope raii_call_first_indent(out);
-      IndentScope raii_call_second_indent(out);
+      PrivateGenerator::IndentScope raii_call_first_indent(out);
+      PrivateGenerator::IndentScope raii_call_second_indent(out);
       out->Print(method_dict,
                  "'$PackageQualifiedServiceName$', rpc_method_handlers)\n");
     }
@@ -673,7 +673,7 @@ pair<bool, grpc::string> PrivateGenerator::GetGrpcServices() {
     } else {
       out->Print("try:\n");
       {
-        IndentScope raii_dict_try_indent(out.get());
+        PrivateGenerator::IndentScope raii_dict_try_indent(out.get());
         out->Print(
             "# THESE ELEMENTS WILL BE DEPRECATED.\n"
             "# Please use the generated *_pb2_grpc.py files instead.\n");
@@ -692,7 +692,7 @@ pair<bool, grpc::string> PrivateGenerator::GetGrpcServices() {
       }
       out->Print("except ImportError:\n");
       {
-        IndentScope raii_dict_except_indent(out.get());
+        PrivateGenerator::IndentScope raii_dict_except_indent(out.get());
         out->Print("pass");
       }
     }
