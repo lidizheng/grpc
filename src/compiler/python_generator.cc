@@ -60,24 +60,6 @@ typedef vector<grpc::string> StringVector;
 typedef tuple<grpc::string, grpc::string> StringPair;
 typedef set<StringPair> StringPairSet;
 
-// Provides RAII indentation handling. Use as:
-// {
-//   IndentScope raii_my_indent_var_name_here(my_py_printer);
-//   // constructor indented my_py_printer
-//   ...
-//   // destructor called at end of scope, un-indenting my_py_printer
-// }
-class IndentScope {
- public:
-  explicit IndentScope(grpc_generator::Printer* printer) : printer_(printer) {
-    printer_->Indent();
-  }
-
-  ~IndentScope() { printer_->Outdent(); }
-
- private:
-  grpc_generator::Printer* printer_;
-};
 
 PrivateGenerator::PrivateGenerator(const GeneratorConfiguration& config,
                                    const grpc_generator::File* file)

@@ -75,6 +75,25 @@ struct PrivateGenerator {
   // wrapping will not be changed.
   void PrintAllComments(std::vector<grpc::string> comments,
                         grpc_generator::Printer* out);
+
+  // Provides RAII indentation handling. Use as:
+  // {
+  //   IndentScope raii_my_indent_var_name_here(my_py_printer);
+  //   // constructor indented my_py_printer
+  //   ...
+  //   // destructor called at end of scope, un-indenting my_py_printer
+  // }
+  class IndentScope {
+  public:
+    explicit IndentScope(grpc_generator::Printer* printer) : printer_(printer) {
+      for (int i=0;i<config->indent_size;i+=2) printer_->Indent();
+    }
+
+    ~IndentScope() { for (int i=0;i<config->indent_size;i+=2) printer_->Outdent(); }
+
+  private:
+    grpc_generator::Printer* printer_;
+  };
 };
 
 }  // namespace

@@ -37,6 +37,8 @@ struct GeneratorConfiguration {
   // TODO(https://github.com/google/protobuf/issues/888): Drop this.
   grpc::string import_prefix;
   std::vector<grpc::string> prefixes_to_filter;
+  // The size of indentation, have to be even number!
+  int indent_size;
 };
 
 class PythonGrpcGenerator : public grpc::protobuf::compiler::CodeGenerator {
