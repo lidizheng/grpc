@@ -26,5 +26,5 @@ RUN mkdir /var/local/work
 
 VOLUME ["/var/local/src", "/var/local/output"]
 
-# COPY ./build.sh /var/local/work
+COPY ./build.sh /var/local/work
 CMD [ "/var/local/output/build.sh" ]
