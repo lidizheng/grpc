@@ -18,6 +18,8 @@ RUN apt-get update && apt-get install -y \
 # C++ dependencies
 RUN apt-get update && apt-get -y install libgflags-dev libgtest-dev libc++-dev clang && apt-get clean
 
+RUN apt-get update && apt-get install -y golang && apt-get clean
+
 # Google Cloud platform API libraries
 RUN apt-get update && apt-get install -y python-pip && apt-get clean
 RUN pip install --upgrade google-api-python-client oauth2client
