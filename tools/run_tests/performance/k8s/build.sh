@@ -7,8 +7,8 @@ docker run --rm \
     --volume=`pwd`/tools/dockerfile/benchmark/cpp_builder/build:/var/local/output \
     cpp-builder
 
-ln -s `pwd`/tools/dockerfile/benchmark/cpp_builder/build tools/dockerfile/benchmark/qps_driver/build
+ln -Fs `pwd`/tools/dockerfile/benchmark/cpp_builder/build tools/dockerfile/benchmark/qps_driver/build
 docker build -t qps-driver tools/dockerfile/benchmark/qps_driver
 
-ln -s `pwd`/tools/dockerfile/benchmark/cpp_builder/build tools/dockerfile/benchmark/cpp_worker/build
+ln -Fs `pwd`/tools/dockerfile/benchmark/cpp_builder/build tools/dockerfile/benchmark/cpp_worker/build
 docker build -t cpp-worker tools/dockerfile/benchmark/cpp_worker
