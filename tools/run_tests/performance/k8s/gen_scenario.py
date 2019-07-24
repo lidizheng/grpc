@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.getcwd(), 'tools', 'run_tests'))
 from performance import scenario_config
 
 def scenario_filter(scenario):
-    return scenario["name"] == 'cpp_protobuf_async_unary_ping_pong_insecure'
+    return scenario["name"] == 'cpp_protobuf_async_streaming_from_server_qps_unconstrained_insecure_100_channels_100_outstanding'
 
 scenarios = filter(scenario_filter, scenario_config.CXXLanguage().scenarios())
 cleaned_scenarios = map(scenario_config.remove_nonproto_fields, scenarios)

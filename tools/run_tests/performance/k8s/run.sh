@@ -11,10 +11,10 @@ docker run --rm --name cpp-worker-2 \
     --env=GRPC_VERBOSITY=debug \
     cpp-worker --driver_port=10002
 
-SCENARIO_JSON=$(python tools/run_tests/performance/k8s/gen_scenario.py)
+python tools/run_tests/performance/k8s/gen_scenario.py > scenario.json
 
 docker run --rm --name the-qps-driver \
-    --volume `pwd`/s.json:/var/local/scenario.json \
+    --volume `pwd`/scenario.json:/var/local/scenario.json \
     --network host \
     --env=QPS_WORKERS="localhost:10001,localhost:10002" \
     qps-driver --scenarios_file=/var/local/scenario.json
