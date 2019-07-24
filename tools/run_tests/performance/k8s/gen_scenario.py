@@ -9,8 +9,10 @@ from performance import scenario_config
 def scenario_filter(scenario):
     return scenario["name"] == 'cpp_protobuf_async_unary_ping_pong_insecure'
 
+scenarios = filter(scenario_filter, scenario_config.CXXLanguage().scenarios())
+cleaned_scenarios = map(scenario_config.remove_nonproto_fields, scenarios)
 print(json.dumps(
     dict(
-        scenarios=filter(scenario_filter, scenario_config.CXXLanguage().scenarios())
+        scenarios=cleaned_scenarios,
     )
 ))
