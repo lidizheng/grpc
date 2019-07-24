@@ -10,5 +10,7 @@ def scenario_filter(scenario):
     return scenario["name"] == 'cpp_protobuf_async_unary_ping_pong_insecure'
 
 print(json.dumps(
-    filter(scenario_filter, scenario_config.CXXLanguage().scenarios())
+    dict(
+        scenarios=filter(scenario_filter, scenario_config.CXXLanguage().scenarios())
+    )
 ))
