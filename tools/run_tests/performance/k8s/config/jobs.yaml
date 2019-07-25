@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cpp-workers-1
+spec:
+  selector:
+    app: this-shit-1
+  clusterIP: None
+  ports:
+  - name: driver-port # Actually, no port is needed.
+    port: 10000
+    targetPort: 10000
+    protocol: TCP
+  - name: server-port # Actually, no port is needed.
+    port: 20000
+    targetPort: 20000
+    protocol: TCP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: benchmark-cpp-worker-pod-1
+  labels:
+    app: this-shit-1
+spec:
+  hostname: cpp-worker-1
+  containers:
+  - name: benchmark-cpp-worker-job
+    image: gcr.io/grpc-testing/benchmark_cpp_worker
+    args:
+      - --driver_port=10000
+      - --server_port=20000
+    env:
+    - name: GRPC_VERBOSITY
+      value: debug
+    ports:
+    - containerPort: 10000
+    # resources:
+    #   limits:
+    #     cpu: "8"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cpp-workers-2
+spec:
+  selector:
+    app: this-shit-2
+  clusterIP: None
+  ports:
+  - name: driver-port # Actually, no port is needed.
+    port: 10000
+    targetPort: 10000
+    protocol: TCP
+  - name: server-port # Actually, no port is needed.
+    port: 20000
+    targetPort: 20000
+    protocol: TCP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: benchmark-cpp-worker-pod-2
+  labels:
+    app: this-shit-2
+spec:
+  containers:
+  - name: benchmark-cpp-worker-job
+    image: gcr.io/grpc-testing/benchmark_cpp_worker
+    args:
+      - --driver_port=10000
+      - --server_port=20000
+    env:
+    - name: GRPC_VERBOSITY
+      value: debug
+    ports:
+    - containerPort: 10000
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: benchmark-qps-driver-pod
+spec:
+  containers:
+  - name: benchmark-qps-driver-job
+    image: gcr.io/grpc-testing/benchmark_qps_driver
+    args: 
+      - '--scenarios_json={"scenarios": [{"name": "cpp_protobuf_async_streaming_from_server_qps_unconstrained_insecure_100_channels_100_outstanding", "warmup_seconds": 5, "benchmark_seconds": 30, "num_servers": 1, "server_config": {"async_server_threads": 0, "channel_args": [{"str_value": "throughput", "name": "grpc.optimization_target"}, {"int_value": 1, "name": "grpc.minimal_stack"}], "security_params": null, "threads_per_cq": 0, "server_type": "ASYNC_SERVER"}, "client_config": {"security_params": null, "channel_args": [{"str_value": "throughput", "name": "grpc.optimization_target"}, {"int_value": 1, "name": "grpc.minimal_stack"}], "async_client_threads": 0, "outstanding_rpcs_per_channel": 1, "rpc_type": "STREAMING_FROM_SERVER", "payload_config": {"simple_params": {"resp_size": 0, "req_size": 0}}, "client_channels": 100, "threads_per_cq": 0, "load_params": {"closed_loop": {}}, "client_type": "ASYNC_CLIENT", "histogram_params": {"max_possible": 60000000000.0, "resolution": 0.01}}, "num_clients": 0}]}'
+    env:
+    - name: GRPC_VERBOSITY
+      value: debug
+    - name: QPS_WORKERS
+      value: cpp-workers-1:10000,cpp-workers-2:10000
