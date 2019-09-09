@@ -40,7 +40,7 @@ class Server:
     can not coexist within the same process.
     """
 
-    def __init__(self, host_and_port): # pylint: disable=W0621
+    def __init__(self, host_and_port):  # pylint: disable=W0621
         self._host_and_port = host_and_port
         self._handle = None
 
