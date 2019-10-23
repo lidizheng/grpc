@@ -520,3 +520,192 @@ cdef class Channel:
 
   def close_on_fork(self, code, details):
     _close(self, code, details, True)
+
+
+# Object presents an RPC that lives across functions
+cdef class RPC:
+  cdef grpc_call *call
+  cdef grpc_completion_queue *cq
+
+  cdef readonly tuple initial_metadata
+  cdef readonly object code
+  cdef readonly str details
+  cdef readonly str debug_error_string
+  cdef readonly tuple trailing_metadata
+
+  def __cinit__(self):
+    self.cq = grpc_completion_queue_create_for_next(NULL)
+  
+  cdef grpc_event poll(self, object deadline) except *:
+    return _next(self.cq, deadline)
+  
+  def __dealloc__(self):
+    grpc_completion_queue_shutdown(self.cq)
+    grpc_completion_queue_destroy(self.cq)
+
+
+cdef RPC establish_rpc_call(grpc_channel *c_channel,
+                            bytes method,
+                            bytes host,
+                            int flags,
+                            object deadline,
+                            CallCredentials credentials):
+  cdef grpc_slice method_slice
+  cdef grpc_slice host_slice
+  cdef grpc_slice *host_slice_ptr
+  cdef grpc_call_credentials *c_call_credentials
+  cdef grpc_call_error c_call_error
+
+  cdef RPC rpc = RPC()
+  cdef grpc_op * ops
+
+  method_slice = _slice_from_bytes(method)
+  if host is None:
+    host_slice_ptr = NULL
+  else:
+    host_slice = _slice_from_bytes(host)
+    host_slice_ptr = &host_slice
+
+  rpc.call = grpc_channel_create_call(
+    c_channel, NULL, flags,
+    rpc.cq, method_slice, host_slice_ptr,
+    _timespec_from_time(deadline), NULL)
+
+  grpc_slice_unref(method_slice)
+  if host_slice_ptr:
+    grpc_slice_unref(host_slice)
+  
+  # if context is not None:
+  #   set_census_context_on_call(call_state, context)
+  
+  if credentials is not None:
+    c_call_credentials = credentials.c()
+    c_call_error = grpc_call_set_credentials(
+        rpc.call, c_call_credentials)
+    grpc_call_credentials_release(c_call_credentials)
+    if c_call_error != GRPC_CALL_OK:
+      grpc_call_unref(rpc.call)
+      rpc.call = NULL
+      _raise_call_error_no_metadata(c_call_error)
+  
+  return rpc
+
+cdef _UNARY_UNARY_OP_LENGTH = 6
+
+cdef _channel_unary_unary_impl(RPC rpc,
+                               bytes request,
+                               tuple initial_metadata):
+  cdef Operation initial_metadata_operation
+  cdef Operation send_message_operation
+  cdef Operation send_close_from_client_operation
+  cdef Operation receive_initial_metadata_operation
+  cdef Operation receive_message_operation
+  cdef Operation receive_status_on_client_operation
+
+  cdef grpc_call_error error
+  cdef object tag = object()
+
+  ops = <grpc_op *>gpr_malloc(sizeof(grpc_op) * _UNARY_UNARY_OP_LENGTH)
+
+  initial_metadata_operation = SendInitialMetadataOperation(initial_metadata, GRPC_INITIAL_METADATA_USED_MASK)
+  initial_metadata_operation.c()
+  ops[0] = <grpc_op> initial_metadata_operation.c_op
+
+  send_message_operation = SendMessageOperation(request, _EMPTY_FLAGS)
+  send_message_operation.c()
+  ops[1] = <grpc_op> send_message_operation.c_op
+
+  send_close_from_client_operation = SendCloseFromClientOperation(_EMPTY_FLAGS)
+  send_close_from_client_operation.c()
+  ops[2] = <grpc_op> send_close_from_client_operation.c_op
+
+  receive_initial_metadata_operation = ReceiveInitialMetadataOperation(_EMPTY_FLAGS)
+  receive_initial_metadata_operation.c()
+  ops[3] = <grpc_op> receive_initial_metadata_operation.c_op
+
+  receive_message_operation = ReceiveMessageOperation(_EMPTY_FLAGS)
+  receive_message_operation.c()
+  ops[4] = <grpc_op> receive_message_operation.c_op
+
+  receive_status_on_client_operation = ReceiveStatusOnClientOperation(_EMPTY_FLAGS)
+  receive_status_on_client_operation.c()
+  ops[5] = <grpc_op> receive_status_on_client_operation.c_op
+
+  error = grpc_call_start_batch(
+    rpc.call,
+    ops,
+    _UNARY_UNARY_OP_LENGTH,
+    <cpython.PyObject *>tag,
+    NULL
+  )
+  if error != GRPC_CALL_OK:
+    _raise_call_error_no_metadata(error)
+
+  cdef grpc_event c_event
+  c_event = rpc.poll(None)
+
+  if c_event.type == GRPC_OP_COMPLETE:
+    pass
+  elif c_event.type == GRPC_QUEUE_TIMEOUT:
+    raise Exception('Failed in channel_unary_unary: GRPC_QUEUE_TIMEOUT')
+  elif c_event.type == GRPC_QUEUE_SHUTDOWN:
+    raise Exception('Failed in channel_unary_unary: GRPC_QUEUE_SHUTDOWN')
+
+  if c_event.success == 0:
+    raise Exception('Polled failed grpc_event')
+  
+  assert (<object>c_event.tag) is tag
+
+  initial_metadata_operation.un_c()
+  send_message_operation.un_c()
+  send_close_from_client_operation.un_c()
+  receive_initial_metadata_operation.un_c()
+  receive_message_operation.un_c()
+  receive_status_on_client_operation.un_c()
+
+  rpc.initial_metadata = receive_initial_metadata_operation.initial_metadata()
+
+  rpc.code = receive_status_on_client_operation.code()
+  rpc.details = receive_status_on_client_operation.details()
+  rpc.debug_error_string = receive_status_on_client_operation.error_string()
+
+  cdef bytes response_raw = receive_message_operation.message()
+
+  grpc_call_unref(rpc.call)
+  gpr_free(ops)
+  return response_raw
+
+
+def channel_unary_unary(Channel channel,
+                        bytes method,
+                        object request_serializer,
+                        object response_deserializer,
+                        object request_message,
+                        object deadline,
+                        tuple metadata,
+                        CallCredentials credentials):
+  cdef RPC rpc = establish_rpc_call(
+    channel._state.c_channel,
+    method,
+    None,
+    0,
+    deadline,
+    credentials,
+  )
+
+  cdef bytes request_raw
+  cdef bytes response_raw
+  cdef object response_message
+  if request_serializer is not None:
+    request_raw = request_serializer(request_message)
+  else:
+    request_raw = request_message
+  
+  response_raw = _channel_unary_unary_impl(
+    rpc,
+    request_raw,
+    metadata,
+  )
+
+  response_message = response_deserializer(response_raw)
+  return rpc, response_message

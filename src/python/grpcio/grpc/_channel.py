@@ -540,6 +540,57 @@ def _determine_deadline(user_deadline):
         return min(parent_deadline, user_deadline)
 
 
+
+
+# grpc.Future
+class _SimpleCall(grpc.RpcError, grpc.Call):
+    def __init__(self, rpc):
+        self._rpc = rpc
+        self._callbacks = []
+        # self._debug_error_string = rpc.debug_error_string
+    
+    def code(self):
+        if self._rpc.code is None:
+            code = grpc.StatusCode.UNKNOWN
+        else:
+            return _common.CYGRPC_STATUS_CODE_TO_STATUS_CODE.get(
+                self._rpc.code)
+        # if state.code is None:
+        #         code = 
+        #         if code is None:
+        #             state.code = grpc.StatusCode.UNKNOWN
+        #             state.details = _unknown_code_details(
+        #                 code, batch_operation.details())
+        #         else:
+        #             state.code = code
+        #             state.details = batch_operation.details()
+        #             state.debug_error_string = batch_operation.error_string()
+        # return self._rpc.code
+    
+    def details(self):
+        return self._rpc.details
+    
+    def initial_metadata(self):
+        return self._rpc.initial_metadata
+    
+    def trailing_metadata(self):
+        return self._rpc.trailing_metadata
+    
+    def add_callback(self, callback):
+        self._callbacks.append(callback)
+    
+    def cancel(self):
+        raise NotImplementedError()
+
+    def is_active(self):
+        raise NotImplementedError()
+
+    def time_remaining(self):
+        raise NotImplementedError()
+
+
+
+
 class _UnaryUnaryMultiCallable(grpc.UnaryUnaryMultiCallable):
 
     # pylint: disable=too-many-arguments
@@ -599,9 +650,22 @@ class _UnaryUnaryMultiCallable(grpc.UnaryUnaryMultiCallable):
                  credentials=None,
                  wait_for_ready=None,
                  compression=None):
-        state, call, = self._blocking(request, timeout, metadata, credentials,
-                                      wait_for_ready, compression)
-        return _end_unary_response_blocking(state, call, False, None)
+        rpc, response = cygrpc.channel_unary_unary(
+            self._channel,
+            _common.encode(self._method),
+            self._request_serializer,
+            self._response_deserializer,
+            request,
+            _deadline(timeout),
+            metadata,
+            credentials,
+        )
+        # _SimpleCall(rpc)
+        return response
+        # state, call, = self._blocking(request, timeout, metadata, credentials,
+        #                               wait_for_ready, compression)
+        # return _end_unary_response_blocking(state, call, False, None)
+
 
     def with_call(self,
                   request,
