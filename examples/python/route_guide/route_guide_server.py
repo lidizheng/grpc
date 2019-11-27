@@ -108,10 +108,13 @@ class RouteGuideServicer(route_guide_pb2_grpc.RouteGuideServicer):
             for prev_note in prev_notes:
                 if prev_note.location == new_note.location:
                     yield prev_note
+            server.stop(None)    
             prev_notes.append(new_note)
 
+server = None
 
 def serve():
+    global server
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     route_guide_pb2_grpc.add_RouteGuideServicer_to_server(
         RouteGuideServicer(), server)
