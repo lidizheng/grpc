@@ -105,6 +105,7 @@ grpc_error* grpc_chttp2_rst_stream_parser_parse(void* parser,
                       ((static_cast<uint32_t>(p->reason_bytes[1])) << 16) |
                       ((static_cast<uint32_t>(p->reason_bytes[2])) << 8) |
                       ((static_cast<uint32_t>(p->reason_bytes[3])));
+    gpr_log(GPR_DEBUG, "[chttp2]: Parsing RST_STREAM frame; reason: %d, peer: %s; stream_id: %d %d %d %d", reason, t->peer_string, t->next_stream_id, t->last_new_stream_id, t->expect_continuation_stream_id, t->incoming_stream_id);
     grpc_error* error = GRPC_ERROR_NONE;
     if (reason != GRPC_HTTP2_NO_ERROR || s->metadata_buffer[1].size == 0) {
       char* message;

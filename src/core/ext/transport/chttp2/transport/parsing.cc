@@ -288,29 +288,29 @@ static grpc_error* init_frame_parser(grpc_chttp2_transport* t) {
   }
   switch (t->incoming_frame_type) {
     case GRPC_CHTTP2_FRAME_DATA:
-      gpr_log(GPR_DEBUG, "[chttp2]: Received DATA frame");
+      gpr_log(GPR_DEBUG, "[chttp2]: Received DATA frame; peer: %s; stream_id: %d %d %d %d", t->peer_string, t->next_stream_id, t->last_new_stream_id, t->expect_continuation_stream_id, t->incoming_stream_id);
       return init_data_frame_parser(t);
     case GRPC_CHTTP2_FRAME_HEADER:
-      gpr_log(GPR_DEBUG, "[chttp2]: Received HEADER frame");
+      gpr_log(GPR_DEBUG, "[chttp2]: Received HEADER frame; peer: %s; stream_id: %d %d %d %d", t->peer_string, t->next_stream_id, t->last_new_stream_id, t->expect_continuation_stream_id, t->incoming_stream_id);
       return init_header_frame_parser(t, 0);
     case GRPC_CHTTP2_FRAME_CONTINUATION:
-      gpr_log(GPR_DEBUG, "[chttp2]: Received CONTINUATION frame");
+      gpr_log(GPR_DEBUG, "[chttp2]: Received CONTINUATION frame; peer: %s; stream_id: %d %d %d %d", t->peer_string, t->next_stream_id, t->last_new_stream_id, t->expect_continuation_stream_id, t->incoming_stream_id);
       return GRPC_ERROR_CREATE_FROM_STATIC_STRING(
           "Unexpected CONTINUATION frame");
     case GRPC_CHTTP2_FRAME_RST_STREAM:
-      gpr_log(GPR_DEBUG, "[chttp2]: Received RST_STREAM frame");
+      gpr_log(GPR_DEBUG, "[chttp2]: Received RST_STREAM frame; peer: %s; stream_id: %d %d %d %d", t->peer_string, t->next_stream_id, t->last_new_stream_id, t->expect_continuation_stream_id, t->incoming_stream_id);
       return init_rst_stream_parser(t);
     case GRPC_CHTTP2_FRAME_SETTINGS:
-      gpr_log(GPR_DEBUG, "[chttp2]: Received SETTINGS frame");
+      gpr_log(GPR_DEBUG, "[chttp2]: Received SETTINGS frame; peer: %s; stream_id: %d %d %d %d", t->peer_string, t->next_stream_id, t->last_new_stream_id, t->expect_continuation_stream_id, t->incoming_stream_id);
       return init_settings_frame_parser(t);
     case GRPC_CHTTP2_FRAME_WINDOW_UPDATE:
-      gpr_log(GPR_DEBUG, "[chttp2]: Received WINDOW_UPDATE frame");
+      gpr_log(GPR_DEBUG, "[chttp2]: Received WINDOW_UPDATE frame; peer: %s; stream_id: %d %d %d %d", t->peer_string, t->next_stream_id, t->last_new_stream_id, t->expect_continuation_stream_id, t->incoming_stream_id);
       return init_window_update_frame_parser(t);
     case GRPC_CHTTP2_FRAME_PING:
-      gpr_log(GPR_DEBUG, "[chttp2]: Received PING frame");
+      gpr_log(GPR_DEBUG, "[chttp2]: Received PING frame; peer: %s; stream_id: %d %d %d %d", t->peer_string, t->next_stream_id, t->last_new_stream_id, t->expect_continuation_stream_id, t->incoming_stream_id);
       return init_ping_parser(t);
     case GRPC_CHTTP2_FRAME_GOAWAY:
-      gpr_log(GPR_DEBUG, "[chttp2]: Received GOAWAY frame");
+      gpr_log(GPR_DEBUG, "[chttp2]: Received GOAWAY frame; peer: %s; stream_id: %d %d %d %d", t->peer_string, t->next_stream_id, t->last_new_stream_id, t->expect_continuation_stream_id, t->incoming_stream_id);
       return init_goaway_parser(t);
     default:
       if (GRPC_TRACE_FLAG_ENABLED(grpc_http_trace)) {
