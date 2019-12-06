@@ -359,7 +359,7 @@ class UnaryStreamCall(Call, _base_call.UnaryStreamCall):
         serialized_request = _common.serialize(self._request,
                                                self._request_serializer)
 
-        async_gen = self._channel.unary_stream(
+        async_gen = await self._channel.unary_stream(
             self._method,
             serialized_request,
             self._deadline,
