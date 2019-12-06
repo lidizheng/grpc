@@ -106,6 +106,11 @@ class TestServer(AioTestBase):
             unary_stream_call = channel.unary_stream(_UNARY_STREAM_ASYNC_GEN)
             call = unary_stream_call(_REQUEST)
 
+            # Expecting the request message to reach server before retriving
+            # any responses.
+            await asyncio.wait_for(self._generic_handler.wait_for_call(),
+                                   test_constants.SHORT_TIMEOUT)
+
             response_cnt = 0
             async for response in call:
                 response_cnt += 1
@@ -118,6 +123,11 @@ class TestServer(AioTestBase):
         async with aio.insecure_channel(self._server_target) as channel:
             unary_stream_call = channel.unary_stream(_UNARY_STREAM_ASYNC_GEN)
             call = unary_stream_call(_REQUEST)
+
+            # Expecting the request message to reach server before retriving
+            # any responses.
+            await asyncio.wait_for(self._generic_handler.wait_for_call(),
+                                   test_constants.SHORT_TIMEOUT)
 
             for _ in range(_NUM_STREAM_RESPONSES):
                 response = await call.read()

@@ -32,6 +32,9 @@ cdef class _AioCall:
 
         self._status_received = asyncio.Event(loop=self._loop)
 
+    def __dealloc__(self):
+        self._destroy_grpc_call()
+
     def __repr__(self):
         class_name = self.__class__.__name__
         id_ = id(self)
@@ -193,6 +196,28 @@ cdef class _AioCall:
 
         cancellation_future.add_done_callback(_cancellation_action)
 
+    async def _message_async_generator(self):
+        cdef bytes received_message
+
+        # Infinitely receiving messages, until:
+        # * EOF, no more messages to read;
+        # * The client application cancells;
+        # * The server sends final status.
+        while True:
+            if self._status_received.is_set():
+                return
+
+            received_message = await _receive_message(
+                self._grpc_call_wrapper,
+                self._loop
+            )
+            if received_message is None:
+                # The read operation failed, wait for status from C-Core.
+                await self._status_received.wait()
+                return
+            else:
+                yield received_message
+
     async def unary_stream(self,
                            bytes method,
                            bytes request,
@@ -206,7 +231,6 @@ cdef class _AioCall:
         propagate the final status exception, then we have to raise it.
         Othersize, it would end normally and raise `StopAsyncIteration()`.
         """
-        cdef bytes received_message
         cdef tuple outbound_ops
         cdef Operation initial_metadata_op = SendInitialMetadataOperation(
             _EMPTY_METADATA,
@@ -225,43 +249,27 @@ cdef class _AioCall:
 
         # NOTE(lidiz) Not catching CancelledError here, because async
         # generators do not have "cancel" method.
-        try:
-            self._create_grpc_call(deadline, method)
 
-            await callback_start_batch(
-                self._grpc_call_wrapper,
-                outbound_ops,
-                self._loop)
+        # Creates the grpc_call C-Core object. This object needs to be dealloc
+        # explicitly after the RPC is finished.
+        self._create_grpc_call(deadline, method)
 
-            # Peer may prematurely end this RPC at any point. We need a mechanism
-            # that handles both the normal case and the error case.
-            self._loop.create_task(self._handle_status_once_received(status_observer))
-            self._handle_cancellation_from_application(cancellation_future,
-                                                       status_observer)
+        # Actually sends out the request message.
+        await callback_start_batch(
+            self._grpc_call_wrapper,
+            outbound_ops,
+            self._loop)
 
-            # Receives initial metadata.
-            initial_metadata_observer(
-                await _receive_initial_metadata(self._grpc_call_wrapper,
-                                                self._loop),
-            )
+        # Peer may prematurely end this RPC at any point. We need a mechanism
+        # that handles both the normal case and the error case.
+        self._loop.create_task(self._handle_status_once_received(status_observer))
+        self._handle_cancellation_from_application(cancellation_future,
+                                                    status_observer)
 
-            # Infinitely receiving messages, until:
-            # * EOF, no more messages to read;
-            # * The client application cancells;
-            # * The server sends final status.
-            while True:
-                if self._status_received.is_set():
-                    return
+        # Receives initial metadata.
+        initial_metadata_observer(
+            await _receive_initial_metadata(self._grpc_call_wrapper,
+                                            self._loop),
+        )
 
-                received_message = await _receive_message(
-                    self._grpc_call_wrapper,
-                    self._loop
-                )
-                if received_message is None:
-                    # The read operation failed, wait for status from C-Core.
-                    await self._status_received.wait()
-                    return
-                else:
-                    yield received_message
-        finally:
-            self._destroy_grpc_call()
+        return self._message_async_generator()
