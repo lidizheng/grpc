@@ -4,6 +4,7 @@
   "unit.call_test.TestUnaryStreamCall",
   "unit.call_test.TestUnaryUnaryCall",
   "unit.channel_test.TestChannel",
+  "unit.connectivity_test.TestConnectivityState",
   "unit.init_test.TestInsecureChannel",
   "unit.server_test.TestServer"
 ]
