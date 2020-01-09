@@ -12,16 +12,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+class _WatchConnectivityFailed(Exception): pass
+cdef CallbackFailureHandler _WATCH_CONNECTIVITY_FAILURE_HANDLER = CallbackFailureHandler(
+    'watch_connectivity_state',
+    'Maybe timed out.',
+    _WatchConnectivityFailed)
+
+
 cdef class AioChannel:
     def __cinit__(self, bytes target):
         self.channel = grpc_insecure_channel_create(<char *>target, NULL, NULL)
         self.cq = CallbackCompletionQueue()
         self._target = target
+        self._loop = asyncio.get_event_loop()
 
     def __repr__(self):
         class_name = self.__class__.__name__
         id_ = id(self)
         return f"<{class_name} {id_}>"
+
+    def check_connectivity_state(self, bint try_to_connect):
+        return grpc_channel_check_connectivity_state(
+            self.channel,
+            try_to_connect,
+        )
+
+    async def watch_connectivity_state(self,
+                                       grpc_connectivity_state last_observed_state,
+                                       object deadline):
+        cdef gpr_timespec c_deadline = _timespec_from_time(deadline)
+
+        cdef object future = self._loop.create_future()
+        cdef CallbackWrapper wrapper = CallbackWrapper(
+            future,
+            _WATCH_CONNECTIVITY_FAILURE_HANDLER)
+        grpc_channel_watch_connectivity_state(
+            self.channel,
+            last_observed_state,
+            c_deadline,
+            self.cq.c_ptr(),
+            wrapper.c_functor())
+
+        try:
+            await future
+        except _WatchConnectivityFailed:
+            return None
+        else:
+            return self.check_connectivity_state(False)
 
     def close(self):
         grpc_channel_destroy(self.channel)
