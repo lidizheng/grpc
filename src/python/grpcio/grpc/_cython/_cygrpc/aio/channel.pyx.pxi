@@ -70,14 +70,18 @@ cdef class AioChannel:
             self.cq.c_ptr(),
             wrapper.c_functor())
 
+        def dealloc_wrapper(_):
+            cpython.Py_DECREF(wrapper)
+
+        future.add_done_callback(dealloc_wrapper)
+
         try:
             await future
         except _WatchConnectivityFailed:
             return False
         else:
             return True
-        finally:
-            cpython.Py_DECREF(wrapper)
+            
 
     def close(self):
         grpc_channel_destroy(self.channel)
