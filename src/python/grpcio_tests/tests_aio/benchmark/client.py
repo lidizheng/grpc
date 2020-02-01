@@ -80,19 +80,38 @@ async def single(url, n):
     return await workload((url, n))
 
 
+async def profile(work):
+    import cProfile, pstats, io
+    from pstats import SortKey
+    pr = cProfile.Profile()
+
+    pr.enable()
+    await work
+    pr.disable()
+
+    s = io.StringIO()
+    ps = pstats.Stats(pr, stream=s).sort_stats(SortKey.TIME)
+    ps.print_stats()
+    print(s.getvalue())
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--url', type=str, nargs='?',
                         default='localhost:50051')
     parser.add_argument('-c', type=int, nargs='?', default=0)
     parser.add_argument('-n', type=int, nargs='?', default=100)
+    parser.add_argument('-p', action='store_false')
     return parser.parse_args()
 
 
 async def main():
     args = parse_arguments()
 
-    result = await single(args.url, args.n)
+    if not args.p:
+        result = await single(args.url, args.n)
+    else:
+        result = await profile(single(args.url, args.n))
     print_latency(result.latencies)
     print('Total QPS is %.2f' % result.qps)
 
