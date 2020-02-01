@@ -17,8 +17,8 @@ import logging
 import unittest
 
 from grpc.experimental import aio
-from src.proto.grpc.testing import messages_pb2
-from src.proto.grpc.testing import benchmark_service_pb2_grpc
+
+from src.proto.grpc.testing import benchmark_service_pb2_grpc, messages_pb2
 
 
 class BenchmarkServer(benchmark_service_pb2_grpc.BenchmarkServiceServicer):
