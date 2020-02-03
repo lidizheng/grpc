@@ -418,16 +418,10 @@ class UnaryUnaryCall(_UnaryResponseMixin, Call, _base_call.UnaryUnaryCall):
     _request: RequestType
 
     # pylint: disable=too-many-arguments
-    def __init__(self, request: RequestType, deadline: Optional[float],
-                 metadata: MetadataType,
-                 credentials: Optional[grpc.CallCredentials],
-                 wait_for_ready: Optional[bool], channel: cygrpc.AioChannel,
-                 method: bytes, request_serializer: SerializingFunction,
-                 response_deserializer: DeserializingFunction,
-                 loop: asyncio.AbstractEventLoop) -> None:
+    def __init__(self, request: RequestType, multi_callable_args, call_args) -> None:
         super().__init__(
-            channel.call(method, deadline, credentials, wait_for_ready),
-            metadata, request_serializer, response_deserializer, loop)
+            channel.call(multi_callable_args.method, call_args.deadline, call_args.credentials, call_args.wait_for_ready),
+            call_args.metadata, multi_callable_args.request_serializer, multi_callable_args.response_deserializer, multi_callable_args.loop)
         self._request = request
         self._init_unary_response_mixin(self._invoke())
 

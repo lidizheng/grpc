@@ -14,6 +14,7 @@
 """Invocation-side implementation of gRPC Asyncio Python."""
 import asyncio
 from typing import Any, AsyncIterable, Optional, Sequence, Text
+import collections
 
 import grpc
 from grpc import _common
@@ -31,17 +32,18 @@ from ._utils import _timeout_to_deadline
 _IMMUTABLE_EMPTY_TUPLE = tuple()
 
 
+_MultiCallableArguments = collections.namedtuple(
+  '_MultiCallableArguments',  ['loop', 'channel', 'method', 'request_serializer', 'response_deserializer', 'interceptors'])
+_CallArguments = collections.namedtuple(
+  '_CallArguments',  ['deadline', 'metadata', 'credentials', 'wait_for_ready', 'compression'])
+
+
 class _BaseMultiCallable:
     """Base class of all multi callable objects.
 
     Handles the initialization logic and stores common attributes.
     """
-    _loop: asyncio.AbstractEventLoop
-    _channel: cygrpc.AioChannel
-    _method: bytes
-    _request_serializer: SerializingFunction
-    _response_deserializer: DeserializingFunction
-    _interceptors: Optional[Sequence[UnaryUnaryClientInterceptor]]
+    _multi_callable_arguments: _MultiCallableArguments
 
     def __init__(
             self,
@@ -52,12 +54,14 @@ class _BaseMultiCallable:
             interceptors: Optional[Sequence[UnaryUnaryClientInterceptor]],
             loop: asyncio.AbstractEventLoop,
     ) -> None:
-        self._loop = loop
-        self._channel = channel
-        self._method = method
-        self._request_serializer = request_serializer
-        self._response_deserializer = response_deserializer
-        self._interceptors = interceptors
+        self._multi_callable_arguments = _MultiCallableArguments(
+          loop,
+          channel,
+          method,
+          request_serializer,
+          response_deserializer,
+          interceptors,
+        )
 
 
 class UnaryUnaryMultiCallable(_BaseMultiCallable):
@@ -101,12 +105,16 @@ class UnaryUnaryMultiCallable(_BaseMultiCallable):
         if metadata is None:
             metadata = _IMMUTABLE_EMPTY_TUPLE
 
+        call_args = _CallArguments(
+          _timeout_to_deadline(timeout),
+          metadata,
+          credentials,
+          wait_for_ready,
+          compression,
+        )
+
         if not self._interceptors:
-            return UnaryUnaryCall(request, _timeout_to_deadline(timeout),
-                                  metadata, credentials, wait_for_ready,
-                                  self._channel, self._method,
-                                  self._request_serializer,
-                                  self._response_deserializer, self._loop)
+            return UnaryUnaryCall(request, self._multi_callable_arguments, call_args)
         else:
             return InterceptedUnaryUnaryCall(
                 self._interceptors, request, timeout, metadata, credentials,
