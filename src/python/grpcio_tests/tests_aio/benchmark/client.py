@@ -21,6 +21,7 @@ import multiprocessing
 import os
 import time
 import timeit
+import yep
 
 import grpc
 from grpc.experimental import aio
@@ -80,19 +81,28 @@ async def single(url, n):
     return await workload((url, n))
 
 
-async def profile(work):
+async def cprofile(work):
     import cProfile, pstats, io
     from pstats import SortKey
     pr = cProfile.Profile()
 
     pr.enable()
-    await work
+    result = await work
     pr.disable()
 
     s = io.StringIO()
     ps = pstats.Stats(pr, stream=s).sort_stats(SortKey.TIME)
     ps.print_stats()
-    print(s.getvalue())
+    return result, s.getvalue()
+
+
+async def yeprofile(work):
+    print('Starting Yep profiling...')
+    yep.start('/tmp/aio.prof')
+    result = await work
+    yep.stop()
+    print('Stopped Yep profiling.')
+    return result
 
 
 def parse_arguments():
@@ -101,21 +111,27 @@ def parse_arguments():
                         default='localhost:50051')
     parser.add_argument('-c', type=int, nargs='?', default=0)
     parser.add_argument('-n', type=int, nargs='?', default=100)
-    parser.add_argument('-p', action='store_false')
+    parser.add_argument('-p', action='store_true')
     return parser.parse_args()
 
 
 async def main():
     args = parse_arguments()
+    print('Value of P', args.p)
 
+    printable = None
     if not args.p:
         result = await single(args.url, args.n)
     else:
-        result = await profile(single(args.url, args.n))
+        result = await yeprofile(single(args.url, args.n))
+        # result, printable = await cprofile(single(args.url, args.n))
     print_latency(result.latencies)
     print('Total QPS is %.2f' % result.qps)
+    if printable is not None:
+        print(printable)
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     asyncio.run(main())
+
