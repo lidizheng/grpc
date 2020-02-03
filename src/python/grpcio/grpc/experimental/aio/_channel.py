@@ -41,13 +41,7 @@ class _BaseMultiCallable:
     _method: bytes
     _request_serializer: SerializingFunction
     _response_deserializer: DeserializingFunction
-
-    _channel: cygrpc.AioChannel
-    _method: bytes
-    _request_serializer: SerializingFunction
-    _response_deserializer: DeserializingFunction
     _interceptors: Optional[Sequence[UnaryUnaryClientInterceptor]]
-    _loop: asyncio.AbstractEventLoop
 
     def __init__(
             self,
