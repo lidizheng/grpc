@@ -38,6 +38,14 @@ async def run_a_request(call, request, latencies):
     latencies.append(time.time() - start)
 
 
+async def run_requests(n, call, request, latencies):
+    print('Running [%d] calls in a task' % n)
+    for _ in range(n):
+        start = time.time()
+        await call(request)
+        latencies.append(time.time() - start)
+
+
 def connect(url):
     aio.init_grpc_aio()
     channel = aio.insecure_channel(url)
@@ -46,12 +54,19 @@ def connect(url):
 
 
 async def workload(args):
-    url, number = args
+    url, number, concurrency = args
     call = connect(url)
     request = messages_pb2.SimpleRequest(response_size=1)
     latencies = []
 
-    tasks = [run_a_request(call, request, latencies) for i in range(number)]
+    if concurrency == 0:
+        tasks = [run_a_request(call, request, latencies) for i in range(number)]
+    else:
+        tasks = []
+        split = number // concurrency
+        for _ in range(concurrency-1):
+            tasks.append(run_requests(split, call, request, latencies))
+        tasks.append(run_requests(number - split*(concurrency-1), call, request, latencies))
 
     start = time.time()
     await asyncio.gather(*tasks)
@@ -59,9 +74,6 @@ async def workload(args):
 
     print('Running %d cycles of RPC calls in %f seconds QPS %f' %
           (number, time_elapsed, number / time_elapsed))
-
-    while len(latencies) < number:
-        time.sleep(1)
 
     return WorkloadResult(qps=len(latencies) / time_elapsed, latencies=latencies)
 
@@ -76,9 +88,9 @@ def print_latency(latencies):
           (latencies[int(len(latencies) / 100 * 99)] * 1000))
 
 
-async def single(url, n):
-    print('Benchmark against [%s] total [%d]' % (url, n))
-    return await workload((url, n))
+async def single(url, n, c):
+    print('Benchmark against [%s] total [%d] concurrency [%d]' % (url, n, c))
+    return await workload((url, n, c))
 
 
 async def cprofile(work):
@@ -121,9 +133,9 @@ async def main():
 
     printable = None
     if not args.p:
-        result = await single(args.url, args.n)
+        result = await single(args.url, args.n, args.c)
     else:
-        result = await yeprofile(single(args.url, args.n))
+        result = await yeprofile(single(args.url, args.n, args.c))
         # result, printable = await cprofile(single(args.url, args.n))
     print_latency(result.latencies)
     print('Total QPS is %.2f' % result.qps)
@@ -134,4 +146,5 @@ async def main():
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     asyncio.run(main())
+
 
