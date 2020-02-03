@@ -113,7 +113,7 @@ class UnaryUnaryMultiCallable(_BaseMultiCallable):
           compression,
         )
 
-        if not self._interceptors:
+        if not self._multi_callable_arguments.interceptors:
             return UnaryUnaryCall(request, self._multi_callable_arguments, call_args)
         else:
             return InterceptedUnaryUnaryCall(
