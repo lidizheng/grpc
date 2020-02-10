@@ -476,11 +476,14 @@ async def _handle_exceptions(RPCState rpc_state, object rpc_coro, object loop):
                 )
     except (KeyboardInterrupt, SystemExit):
         raise
-    except asyncio.CancelledError:
-        _LOGGER.debug('RPC cancelled for servicer method [%s]' % _decode(rpc_state.method()))
     except _ServerStoppedError:
         _LOGGER.info('Aborting RPC due to server stop.')
     except Exception as e:
+        if rpc_state.server._status == AIO_SERVER_STATUS_STOPPED:
+            if isinstance(asyncio.CancelledError, e) or isinstance(ExecuteBatchError, e):
+                _LOGGER.info('Aborting RPC due to server stop.')
+                return
+
         _LOGGER.exception('Unexpected [%s] raised by servicer method [%s]' % (
             type(e).__name__,
             _decode(rpc_state.method()),
