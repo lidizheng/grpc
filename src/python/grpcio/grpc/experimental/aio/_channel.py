@@ -13,7 +13,6 @@
 # limitations under the License.
 """Invocation-side implementation of gRPC Asyncio Python."""
 import asyncio
-import logging
 from typing import AbstractSet, Any, AsyncIterable, Optional, Sequence
 from weakref import WeakSet
 
