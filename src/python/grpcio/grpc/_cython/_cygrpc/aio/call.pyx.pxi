@@ -139,12 +139,13 @@ cdef class _AioCall(GrpcCallWrapper):
 
         # No more waiters should be expected since status
         # has been set.
-        waiters = self._waiters_status
-        self._waiters_status = None
+        if self._waiters_status is not None:
+            waiters = self._waiters_status
+            self._waiters_status = None
 
-        for waiter in waiters:
-            if not waiter.done():
-                waiter.set_result(None)
+            for waiter in waiters:
+                if not waiter.done():
+                    waiter.set_result(None)
 
         for callback in self._done_callbacks:
             callback()
@@ -156,12 +157,13 @@ cdef class _AioCall(GrpcCallWrapper):
 
         # No more waiters should be expected since initial metadata
         # has been set.
-        waiters = self._waiters_initial_metadata
-        self._waiters_initial_metadata = None
+        if self._waiters_status is not None:
+            waiters = self._waiters_initial_metadata
+            self._waiters_initial_metadata = None
 
-        for waiter in waiters:
-            if not waiter.done():
-                waiter.set_result(None)
+            for waiter in waiters:
+                if not waiter.done():
+                    waiter.set_result(None)
 
 
     def add_done_callback(self, callback):
