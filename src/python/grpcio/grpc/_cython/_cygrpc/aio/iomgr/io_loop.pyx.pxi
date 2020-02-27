@@ -1,4 +1,4 @@
-# Copyright 2019 gRPC authors.
+# Copyright 2020 gRPC authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 import os
 import sys
 import threading
+from time import sleep
 
 _SECONDS_PER_MILLISECOND = 0.001
 cdef _IOLoop _io_loop = None
@@ -23,8 +24,7 @@ cdef class _IOLoop:
     def __init__(self):
         global _io_loop
 
-        # Only one instantiation is exepected        
-        assert _io_loop is None
+        assert _io_loop is None, "IO Loop already instantiated"
 
         self._asyncio_loop = None
         self._io_ev = threading.Event()
@@ -51,10 +51,16 @@ cdef class _IOLoop:
         try:
             self._asyncio_loop.run_forever()
         except Exception as exp:
-            sys.stderr("An error ocurred with the IO loop {}{}".format(exp, os.linesep))
+            _LOGGER.error("An error ocurred with the IO loop, aborting the whole process {}".format(exp))
             # Without the IO loop running the program would become
             # unresponsive, proactively we close the process.
             sys.exit(1)
+
+    cdef object asyncio_loop(self):
+        return self._asyncio_loop
+
+    # Following methods are exclusively used for allowing run the synchronous
+    # stack over an already initialized environment with the Aio package
 
     cpdef void io_mark(self):
         # Wake up all threads that were waiting
@@ -67,16 +73,17 @@ cdef class _IOLoop:
 
     cdef void io_wait(self, size_t timeout_ms):
         if threading.get_ident() == self._thread.ident:
-            # (TODO) Fix any use case that could imply io loop reentrance.
+            # (TODO) Fix any use case that could imply IO loop reentrance.
             # As an example, the backup channel poller is executing this code path
             _LOGGER.warning("IO Loop reentrance is not allowed")
             return
 
         if timeout_ms > 0:
             self._io_ev.wait(timeout_ms * _SECONDS_PER_MILLISECOND)
-
-    cdef object asyncio_loop(self):
-        return self._asyncio_loop
+        else:
+            # Release the GIL momentarily for giving a chance the IO Loop
+            # for gathering any pending event
+            sleep(0.0001)
 
 cdef _IOLoop _current_io_loop():
     global _io_loop
