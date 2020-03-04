@@ -13,7 +13,6 @@
 # limitations under the License.
 """Server-side implementation of gRPC Asyncio Python."""
 
-import asyncio
 from concurrent.futures import Executor
 from typing import Any, Optional, Sequence
 
@@ -40,7 +39,7 @@ class Server(_base_server.Server):
                  options: ChannelArgumentType,
                  maximum_concurrent_rpcs: Optional[int],
                  compression: Optional[grpc.Compression]):
-        self._loop = asyncio.get_event_loop()
+        self._loop = cygrpc.grpc_aio_loop()
         self._server = cygrpc.AioServer(
             self._loop, thread_pool, generic_handlers, interceptors,
             _augment_channel_arguments(options, compression),
