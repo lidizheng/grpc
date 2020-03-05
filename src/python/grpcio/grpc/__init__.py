@@ -1857,9 +1857,12 @@ def insecure_channel(target, options=None, compression=None):
     Returns:
       A Channel.
     """
-    from grpc import _channel  # pylint: disable=cyclic-import
+    from grpc.experimental.aio.sync import _channel
     return _channel.Channel(target, () if options is None else options, None,
                             compression)
+    # from grpc import _channel  # pylint: disable=cyclic-import
+    # return _channel.Channel(target, () if options is None else options, None,
+    #                         compression)
 
 
 def secure_channel(target, credentials, options=None, compression=None):

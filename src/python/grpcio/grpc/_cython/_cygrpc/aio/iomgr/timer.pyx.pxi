@@ -24,7 +24,7 @@ cdef class _AsyncioTimer:
     cdef _AsyncioTimer create(grpc_custom_timer * grpc_timer, float timeout):
         timer = _AsyncioTimer()
         timer._grpc_timer = grpc_timer
-        timer._timer_future = grpc_aio_loop().create_task(timer._async_time_up(timeout))
+        timer._timer_future = grpc_schedule_coroutine(timer._async_time_up(timeout))
         timer._active = True
         return timer
 

@@ -21,6 +21,7 @@
   "unit.interceptor_test.TestInterceptedUnaryUnaryCall",
   "unit.interceptor_test.TestUnaryUnaryClientInterceptor",
   "unit.metadata_test.TestMetadata",
+  "unit.sync_compatibility_test.TestSyncCompatibility",
   "unit.server_test.TestServer",
   "unit.timeout_test.TestTimeout",
   "unit.wait_for_ready_test.TestWaitForReady"
