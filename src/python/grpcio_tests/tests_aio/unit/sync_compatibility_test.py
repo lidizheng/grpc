@@ -41,6 +41,10 @@ def _unique_options() -> Sequence[Tuple[str, float]]:
     return (('iv', random.random()),)
 
 
+import tracemalloc
+tracemalloc.start()
+
+
 class TestSyncCompatibility(AioTestBase):
 
     async def setUp(self):

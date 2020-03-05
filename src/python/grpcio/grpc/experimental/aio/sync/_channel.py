@@ -15,6 +15,7 @@
 import grpc
 from grpc.experimental import aio
 from grpc._cython import cygrpc
+import logging
 
 
 class _ShadowRendezvous(grpc.RpcError, grpc.Call, grpc.Future):
@@ -123,9 +124,14 @@ class _UnaryUnaryMultiCallable(grpc.UnaryUnaryMultiCallable):
         return shadow_rendezvous.result()
 
     def with_call(self, *args, **kwargs):
+        import pdb
+        pdb.set_trace()
+        logging.debug('with call 1')
         call = cygrpc.grpc_run_in_event_loop_thread(
             lambda: self._async_multicallable(*args, **kwargs))
+        logging.debug('with call 2')
         shadow_rendezvous = _ShadowRendezvous(call)
+        logging.debug('with call 3')
         return shadow_rendezvous.result(), shadow_rendezvous
 
     def future(self,
