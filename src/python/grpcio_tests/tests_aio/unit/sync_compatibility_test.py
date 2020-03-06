@@ -170,29 +170,6 @@ class TestSyncCompatibility(AioTestBase):
 
         await self._run_in_another_thread(sync_work)
 
-    # async def test_server_unary_unary(self):
-
-    #     def echo(a, b):
-    #         return a
-
-    #     class GenericHandlers(grpc.GenericRpcHandler):
-
-    #         def service(self, handler_call_details):
-    #             return grpc.unary_unary_rpc_method_handler(echo)
-
-    #     server = grpc.server(ThreadPoolExecutor(max_workers=10),
-    #                          handlers=(GenericHandlers(),))
-    #     port = server.add_insecure_port('0')
-    #     server.start()
-
-    #     def sync_work() -> None:
-    #         for _ in range(100):
-    #             with grpc.insecure_channel('localhost:%d' % port) as channel:
-    #                 response = channel.unary_unary('/test/test')(b'\x07\x08')
-    #                 self.assertEqual(response, b'\x07\x08')
-
-    #     await self._run_in_another_thread(sync_work)
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

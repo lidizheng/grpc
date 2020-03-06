@@ -151,7 +151,7 @@ class Server(_base_server.Server):
         The Cython AioServer doesn't hold a ref-count to this class. It should
         be safe to slightly extend the underlying Cython object's life span.
         """
-        self._loop.create_task(self._server.shutdown(None))
+        cygrpc.grpc_schedule_coroutine(self._server.shutdown(None))
 
 
 def server(migration_thread_pool: Optional[Executor] = None,

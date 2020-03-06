@@ -214,6 +214,37 @@ cdef class _ServicerContext:
         self._rpc_state.disable_next_compression = True
 
 
+class SyncServicerContext:
+
+    def __init__(self, async_servicer_context):
+        self._async_servicer_context = async_servicer_context
+
+    def send_initial_metadata(self, metadata):
+        grpc_await(self._async_servicer_context.send_initial_metadata(metadata))
+
+    def abort(self, code, details=''):
+        grpc_await(self._async_servicer_context.abort(code, details))
+
+    def set_trailing_metadata(self, metadata):
+        self._async_servicer_context.set_trailing_metadata(metadata)
+
+    def invocation_metadata(self):
+        return self._async_servicer_context.invocation_metadata()
+
+    def set_code(self, code):
+        self._async_servicer_context.set_code(code)
+
+    def set_details(self, details):
+        self._async_servicer_context.set_details(details)
+
+    def set_compression(self, compression):
+        self._async_servicer_context.set_compression(compression)
+
+    def disable_next_message_compression(self):
+        self._async_servicer_context.disable_next_message_compression()
+
+
+
 cdef _find_method_handler(str method, tuple metadata, list generic_handlers):
     cdef _HandlerCallDetails handler_call_details = _HandlerCallDetails(method,
                                                                         metadata)
@@ -238,11 +269,21 @@ async def _finish_handler_with_unary_response(RPCState rpc_state,
     stream-unary handlers.
     """
     # Executes application logic
-    
-    cdef object response_message = await unary_handler(
-        request,
-        servicer_context,
-    )
+    cdef object response_message
+    if inspect.iscoroutinefunction(unary_handler):
+        response_message = await unary_handler(
+            request,
+            servicer_context,
+        )
+    else:
+        response_message = await loop.run_in_executor(
+            None,
+            lambda: unary_handler(request, SyncServicerContext(servicer_context))
+        )
+
+    if rpc_state.status_code != StatusCode.ok:
+        # Other arguments will be automatically fetched from rpc_state
+        await servicer_context.abort(rpc_state.status_code)
 
     # Raises exception if aborted
     rpc_state.raise_for_termination()
@@ -305,6 +346,11 @@ async def _finish_handler_with_stream_responses(RPCState rpc_state,
             rpc_state.raise_for_termination()
 
             await servicer_context.write(response_message)
+
+    # Only try to abort after all user logic are finished
+    if rpc_state.status_code != StatusCode.ok:
+        # Other arguments will be automatically fetched from rpc_state
+        await servicer_context.abort(rpc_state.status_code)
 
     # Raises exception if aborted
     rpc_state.raise_for_termination()
@@ -617,7 +663,8 @@ cdef class AioServer:
         if maximum_concurrent_rpcs:
             raise NotImplementedError()
         if thread_pool:
-            raise NotImplementedError()
+            pass
+            # raise NotImplementedError()
 
     def add_generic_rpc_handlers(self, generic_rpc_handlers):
         for h in generic_rpc_handlers:

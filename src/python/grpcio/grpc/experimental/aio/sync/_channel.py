@@ -15,7 +15,6 @@
 import grpc
 from grpc.experimental import aio
 from grpc._cython import cygrpc
-import logging
 import threading
 
 

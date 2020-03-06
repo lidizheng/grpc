@@ -1949,12 +1949,14 @@ def server(thread_pool,
     Returns:
       A Server object.
     """
-    from grpc import _server  # pylint: disable=cyclic-import
-    return _server.create_server(thread_pool,
-                                 () if handlers is None else handlers,
-                                 () if interceptors is None else interceptors,
-                                 () if options is None else options,
-                                 maximum_concurrent_rpcs, compression)
+    from grpc.experimental.aio.sync import _server
+    # return _channel.Channel(target, () if options is None else options, None,
+    # compression)
+    # from grpc import _server  # pylint: disable=cyclic-import
+    return _server.Server(thread_pool, () if handlers is None else handlers,
+                          () if interceptors is None else interceptors,
+                          () if options is None else options,
+                          maximum_concurrent_rpcs, compression)
 
 
 @contextlib.contextmanager
