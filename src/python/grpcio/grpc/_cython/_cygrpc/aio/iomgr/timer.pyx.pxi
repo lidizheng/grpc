@@ -36,7 +36,8 @@ cdef class _AsyncioTimer:
             self._active = False
             grpc_custom_timer_callback(self._grpc_timer, <grpc_error*>0)
             cpython.Py_DECREF(self)
-            event_polled.notify_all()
+            with event_polled:
+                event_polled.notify_all()
 
     def __repr__(self):
         class_name = self.__class__.__name__ 
