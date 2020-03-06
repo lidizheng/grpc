@@ -29,7 +29,7 @@ cdef grpc_custom_resolver_vtable asyncio_resolver_vtable
 cdef grpc_custom_timer_vtable asyncio_timer_vtable
 cdef grpc_custom_poller_vtable asyncio_pollset_vtable
 cdef bint so_reuse_port
-event_polled = threading.Event()
+event_polled = threading.Condition()
 
 
 cdef grpc_error* asyncio_socket_init(
@@ -56,7 +56,7 @@ cdef void asyncio_socket_connect(
     host, port = sockaddr_to_tuple(addr, addr_len)
     socket = <_AsyncioSocket>grpc_socket.impl
     socket.connect(host, port, connect_cb)
-    event_polled.set()
+    event_polled.notify_all()
 
 
 cdef void asyncio_socket_close(
@@ -72,7 +72,7 @@ cdef void asyncio_socket_shutdown(grpc_custom_socket* grpc_socket) with gil:
     _LOGGER.debug('asyncio_socket_shutdown')
     socket = (<_AsyncioSocket>grpc_socket.impl)
     socket.close()
-    event_polled.set()
+    event_polled.notify_all()
 
 
 cdef void asyncio_socket_write(
@@ -82,7 +82,7 @@ cdef void asyncio_socket_write(
     _LOGGER.debug('asyncio_socket_write')
     socket = (<_AsyncioSocket>grpc_socket.impl)
     socket.write(slice_buffer, write_cb)
-    event_polled.set()
+    event_polled.notify_all()
 
 
 cdef void asyncio_socket_read(
@@ -93,7 +93,7 @@ cdef void asyncio_socket_read(
     _LOGGER.debug('asyncio_socket_read')
     socket = (<_AsyncioSocket>grpc_socket.impl)
     socket.read(buffer_, length, read_cb)
-    event_polled.set()
+    event_polled.notify_all()
 
 
 cdef grpc_error* asyncio_socket_getpeername(
@@ -181,7 +181,7 @@ cdef void asyncio_socket_accept(
         grpc_custom_accept_callback accept_cb) with gil:
     _LOGGER.debug('asyncio_socket_accept')
     (<_AsyncioSocket>grpc_socket.impl).accept(grpc_socket_client, accept_cb)
-    event_polled.set()
+    event_polled.notify_all()
 
 
 cdef grpc_error* asyncio_resolve(
@@ -200,7 +200,7 @@ cdef void asyncio_resolve_async(
     _LOGGER.debug('asyncio_resolve_async')
     resolver = _AsyncioResolver.create(grpc_resolver)
     resolver.resolve(host, port)
-    event_polled.set()
+    event_polled.notify_all()
 
 
 cdef void asyncio_timer_start(grpc_custom_timer* grpc_timer) with gil:
@@ -228,7 +228,7 @@ cdef void asyncio_destroy_loop() with gil:
 cdef void asyncio_kick_loop() with gil:
     # _LOGGER.debug('asyncio_kick_loop')
     # pass
-    event_polled.set()
+    event_polled.notify_all()
 
 
 # async def event_loop_run(float timeout):
