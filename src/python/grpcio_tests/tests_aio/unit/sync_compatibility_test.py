@@ -48,19 +48,17 @@ tracemalloc.start()
 class TestSyncCompatibility(AioTestBase):
 
     async def setUp(self):
-        address, self._async_server = await start_test_server()
+        self._address, self._async_server = await start_test_server()
         # Create async stub
-        self._async_channel = aio.insecure_channel(address,
+        self._async_channel = aio.insecure_channel(self._address,
                                                    options=_unique_options())
         self._async_stub = test_pb2_grpc.TestServiceStub(self._async_channel)
 
         # Create sync stub
-        self._sync_channel = grpc.insecure_channel(address,
-                                                   options=_unique_options())
-        self._sync_stub = test_pb2_grpc.TestServiceStub(self._sync_channel)
+        self._sync_channel = None
+        self._sync_stub = None
 
     async def tearDown(self):
-        self._sync_channel.close()
         await self._async_channel.close()
         await self._async_server.stop(None)
 
@@ -68,7 +66,18 @@ class TestSyncCompatibility(AioTestBase):
         work_done = asyncio.Event()
 
         def thread_work():
+            # Create sync stub
+            self._sync_channel = grpc.insecure_channel(
+                self._address, options=_unique_options())
+            self._sync_stub = test_pb2_grpc.TestServiceStub(self._sync_channel)
+
+            # Run the logic
             func()
+
+            # Clean-up
+            self._sync_channel.close()
+
+            # Mark as success
             self.loop.call_soon_threadsafe(work_done.set)
 
         thread = threading.Thread(target=thread_work)
@@ -92,74 +101,74 @@ class TestSyncCompatibility(AioTestBase):
 
         await self._run_in_another_thread(sync_work)
 
-    # async def test_unary_stream(self):
-    #     request = messages_pb2.StreamingOutputCallRequest()
-    #     for _ in range(_NUM_STREAM_RESPONSES):
-    #         request.response_parameters.append(
-    #             messages_pb2.ResponseParameters(size=_RESPONSE_PAYLOAD_SIZE))
+    async def test_unary_stream(self):
+        request = messages_pb2.StreamingOutputCallRequest()
+        for _ in range(_NUM_STREAM_RESPONSES):
+            request.response_parameters.append(
+                messages_pb2.ResponseParameters(size=_RESPONSE_PAYLOAD_SIZE))
 
-    #     # Calling async API in this thread
-    #     call = self._async_stub.StreamingOutputCall(request)
+        # Calling async API in this thread
+        call = self._async_stub.StreamingOutputCall(request)
 
-    #     for _ in range(_NUM_STREAM_RESPONSES):
-    #         await call.read()
-    #     self.assertEqual(grpc.StatusCode.OK, await call.code())
+        for _ in range(_NUM_STREAM_RESPONSES):
+            await call.read()
+        self.assertEqual(grpc.StatusCode.OK, await call.code())
 
-    #     # Calling sync API in a different thread
-    #     def sync_work() -> None:
-    #         response_iterator = self._sync_stub.StreamingOutputCall(request)
-    #         for response in response_iterator:
-    #             assert _RESPONSE_PAYLOAD_SIZE == len(response.payload.body)
-    #         self.assertEqual(grpc.StatusCode.OK, response_iterator.code())
+        # Calling sync API in a different thread
+        def sync_work() -> None:
+            response_iterator = self._sync_stub.StreamingOutputCall(request)
+            for response in response_iterator:
+                assert _RESPONSE_PAYLOAD_SIZE == len(response.payload.body)
+            self.assertEqual(grpc.StatusCode.OK, response_iterator.code())
 
-    #     await self._run_in_another_thread(sync_work)
+        await self._run_in_another_thread(sync_work)
 
-    # async def test_stream_unary(self):
-    #     payload = messages_pb2.Payload(body=b'\0' * _REQUEST_PAYLOAD_SIZE)
-    #     request = messages_pb2.StreamingInputCallRequest(payload=payload)
+    async def test_stream_unary(self):
+        payload = messages_pb2.Payload(body=b'\0' * _REQUEST_PAYLOAD_SIZE)
+        request = messages_pb2.StreamingInputCallRequest(payload=payload)
 
-    #     # Calling async API in this thread
-    #     async def gen():
-    #         for _ in range(_NUM_STREAM_RESPONSES):
-    #             yield request
+        # Calling async API in this thread
+        async def gen():
+            for _ in range(_NUM_STREAM_RESPONSES):
+                yield request
 
-    #     response = await self._async_stub.StreamingInputCall(gen())
-    #     self.assertEqual(_NUM_STREAM_RESPONSES * _REQUEST_PAYLOAD_SIZE,
-    #                      response.aggregated_payload_size)
+        response = await self._async_stub.StreamingInputCall(gen())
+        self.assertEqual(_NUM_STREAM_RESPONSES * _REQUEST_PAYLOAD_SIZE,
+                         response.aggregated_payload_size)
 
-    #     # Calling sync API in a different thread
-    #     def sync_work() -> None:
-    #         response = self._sync_stub.StreamingInputCall(
-    #             iter([request] * _NUM_STREAM_RESPONSES))
-    #         self.assertEqual(_NUM_STREAM_RESPONSES * _REQUEST_PAYLOAD_SIZE,
-    #                          response.aggregated_payload_size)
+        # Calling sync API in a different thread
+        def sync_work() -> None:
+            response = self._sync_stub.StreamingInputCall(
+                iter([request] * _NUM_STREAM_RESPONSES))
+            self.assertEqual(_NUM_STREAM_RESPONSES * _REQUEST_PAYLOAD_SIZE,
+                             response.aggregated_payload_size)
 
-    #     await self._run_in_another_thread(sync_work)
+        await self._run_in_another_thread(sync_work)
 
-    # async def test_stream_stream(self):
-    #     request = messages_pb2.StreamingOutputCallRequest()
-    #     request.response_parameters.append(
-    #         messages_pb2.ResponseParameters(size=_RESPONSE_PAYLOAD_SIZE))
+    async def test_stream_stream(self):
+        request = messages_pb2.StreamingOutputCallRequest()
+        request.response_parameters.append(
+            messages_pb2.ResponseParameters(size=_RESPONSE_PAYLOAD_SIZE))
 
-    #     # Calling async API in this thread
-    #     call = self._async_stub.FullDuplexCall()
+        # Calling async API in this thread
+        call = self._async_stub.FullDuplexCall()
 
-    #     for _ in range(_NUM_STREAM_RESPONSES):
-    #         await call.write(request)
-    #         response = await call.read()
-    #         assert _RESPONSE_PAYLOAD_SIZE == len(response.payload.body)
+        for _ in range(_NUM_STREAM_RESPONSES):
+            await call.write(request)
+            response = await call.read()
+            assert _RESPONSE_PAYLOAD_SIZE == len(response.payload.body)
 
-    #     await call.done_writing()
-    #     assert await call.code() == grpc.StatusCode.OK
+        await call.done_writing()
+        assert await call.code() == grpc.StatusCode.OK
 
-    #     # Calling sync API in a different thread
-    #     def sync_work() -> None:
-    #         response_iterator = self._sync_stub.FullDuplexCall(iter([request]))
-    #         for response in response_iterator:
-    #             assert _RESPONSE_PAYLOAD_SIZE == len(response.payload.body)
-    #         self.assertEqual(grpc.StatusCode.OK, response_iterator.code())
+        # Calling sync API in a different thread
+        def sync_work() -> None:
+            response_iterator = self._sync_stub.FullDuplexCall(iter([request]))
+            for response in response_iterator:
+                assert _RESPONSE_PAYLOAD_SIZE == len(response.payload.body)
+            self.assertEqual(grpc.StatusCode.OK, response_iterator.code())
 
-    #     await self._run_in_another_thread(sync_work)
+        await self._run_in_another_thread(sync_work)
 
     # async def test_server_unary_unary(self):
 

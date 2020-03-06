@@ -30,9 +30,10 @@ cdef class _AsyncioTimer:
 
     async def _async_time_up(self, float timeout):
         await asyncio.sleep(timeout)
-        self._active = False
-        grpc_custom_timer_callback(self._grpc_timer, <grpc_error*>0)
-        cpython.Py_DECREF(self)
+        if self._active:
+            self._active = False
+            grpc_custom_timer_callback(self._grpc_timer, <grpc_error*>0)
+            cpython.Py_DECREF(self)
 
     def __repr__(self):
         class_name = self.__class__.__name__ 
@@ -43,6 +44,6 @@ cdef class _AsyncioTimer:
         if not self._active:
             return
 
-        self._timer_future.cancel()
         self._active = False
+        grpc_run_in_event_loop_thread(self._timer_future.cancel)
         cpython.Py_DECREF(self)

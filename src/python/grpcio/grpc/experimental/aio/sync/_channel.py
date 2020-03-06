@@ -16,13 +16,28 @@ import grpc
 from grpc.experimental import aio
 from grpc._cython import cygrpc
 import logging
+import threading
 
 
 class _ShadowRendezvous(grpc.RpcError, grpc.Call, grpc.Future):
     """A shadow class that replaces the sync stack's implementation."""
 
-    def __init__(self, async_call: aio.Call):
+    def __init__(self, async_call: aio.Call, request_iterator=None):
         self._async_call = async_call
+        if request_iterator:
+            self._request_iterator = request_iterator
+            self._request_iterator_consumer = threading.Thread(
+                target=self._consume_request_iterator)
+            self._request_iterator_consumer.daemon = True
+            self._request_iterator_consumer.start()
+        else:
+            self._request_iterator = None
+            self._request_iterator_consumer = None
+
+    def _consume_request_iterator(self):
+        for request in self._request_iterator:
+            self._write(request)
+        self._done_writing()
 
     def is_active(self):
         return not self.done()
@@ -31,10 +46,10 @@ class _ShadowRendezvous(grpc.RpcError, grpc.Call, grpc.Future):
         return self._async_call.time_remaining()
 
     def cancel(self):
-        pass
+        return cygrpc.grpc_run_in_event_loop_thread(self._async_call.cancel)
 
     def add_callback(self, callback):
-        pass
+        self._async_call.add_done_callback(lambda _: callback())
 
     def __iter__(self):
         return self
@@ -46,10 +61,17 @@ class _ShadowRendezvous(grpc.RpcError, grpc.Call, grpc.Future):
         return self._next()
 
     def _next(self):
-        raise NotImplementedError()
+        message = cygrpc.grpc_await(self._async_call.read())
+        if message is aio.EOF:
+            raise StopIteration
+        else:
+            return message
 
-    def debug_error_string(self):
-        raise NotImplementedError()
+    def _write(self, request):
+        cygrpc.grpc_await(self._async_call.write(request))
+
+    def _done_writing(self):
+        cygrpc.grpc_await(self._async_call.done_writing())
 
     def _repr(self):
         return repr(self._async_call)
@@ -61,30 +83,28 @@ class _ShadowRendezvous(grpc.RpcError, grpc.Call, grpc.Future):
         return self._repr()
 
     def __del__(self):
-        pass
+        return cygrpc.grpc_run_in_event_loop_thread(self._async_call.__del__)
 
     def initial_metadata(self):
-        pass
+        return cygrpc.grpc_await(self._async_call.initial_metadata())
 
     def trailing_metadata(self):
-        pass
+        return cygrpc.grpc_await(self._async_call.trailing_metadata())
 
     def code(self):
-        return cygrpc.grpc_schedule_coroutine(self._async_call.code()).result()
+        return cygrpc.grpc_await(self._async_call.code())
 
     def details(self):
-        return cygrpc.grpc_schedule_coroutine(
-            self._async_call.details()).result()
+        return cygrpc.grpc_await(self._async_call.details())
 
     def debug_error_string(self):
-        return cygrpc.grpc_schedule_coroutine(
-            self._async_call.debug_error_string()).result()
+        return cygrpc.grpc_await(self._async_call.debug_error_string())
 
     def cancelled(self):
-        pass
+        return cygrpc.grpc_run_in_event_loop_thread(self._async_call.cancelled)
 
     def running(self):
-        pass
+        return not self.done()
 
     def done(self):
         return cygrpc.grpc_run_in_event_loop_thread(self._async_call.done)
@@ -93,23 +113,16 @@ class _ShadowRendezvous(grpc.RpcError, grpc.Call, grpc.Future):
         if timeout is not None:
             raise NotImplementedError()
         else:
-
-            async def await_result():
-                return await self._async_call
-
-            return cygrpc.grpc_schedule_coroutine(await_result()).result()
+            return cygrpc.grpc_await(self._async_call)
 
     def exception(self, timeout=None):
-        pass
+        raise NotImplementedError()
 
     def traceback(self, timeout=None):
-        pass
+        raise NotImplementedError()
 
     def add_done_callback(self, fn):
-        pass
-
-    def _next(self):
-        pass
+        self._async_call.add_done_callback(fn)
 
 
 class _UnaryUnaryMultiCallable(grpc.UnaryUnaryMultiCallable):
@@ -117,49 +130,63 @@ class _UnaryUnaryMultiCallable(grpc.UnaryUnaryMultiCallable):
     def __init__(self, async_multicallable):
         self._async_multicallable = async_multicallable
 
+    def __call__(self, request, **kwargs):
+        return self.future(request, **kwargs).result()
+
+    def with_call(self, request, **kwargs):
+        future = self.future(request, **kwargs)
+        return future.result(), future
+
+    def future(self, request, **kwargs):
+        call = cygrpc.grpc_run_in_event_loop_thread(
+            lambda: self._async_multicallable(request, **kwargs))
+        return _ShadowRendezvous(call)
+
+
+class _UnaryStreamMultiCallable(grpc.UnaryStreamMultiCallable):
+
+    def __init__(self, async_multicallable):
+        self._async_multicallable = async_multicallable
+
     def __call__(self, *args, **kwargs):
         call = cygrpc.grpc_run_in_event_loop_thread(
             lambda: self._async_multicallable(*args, **kwargs))
-        shadow_rendezvous = _ShadowRendezvous(call)
-        return shadow_rendezvous.result()
-
-    def with_call(self, *args, **kwargs):
-        import pdb
-        pdb.set_trace()
-        logging.debug('with call 1')
-        call = cygrpc.grpc_run_in_event_loop_thread(
-            lambda: self._async_multicallable(*args, **kwargs))
-        logging.debug('with call 2')
-        shadow_rendezvous = _ShadowRendezvous(call)
-        logging.debug('with call 3')
-        return shadow_rendezvous.result(), shadow_rendezvous
-
-    def future(self,
-               request,
-               timeout=None,
-               metadata=None,
-               credentials=None,
-               wait_for_ready=None,
-               compression=None):
-        call = self._async_multicallable(request, timeout, metadata,
-                                         credentials, wait_for_ready,
-                                         compression)
         return _ShadowRendezvous(call)
+
+
+class _StreamUnaryMultiCallable(grpc.StreamUnaryMultiCallable):
+
+    def __init__(self, async_multicallable):
+        self._async_multicallable = async_multicallable
+
+    def __call__(self, request_iterator, **kwargs):
+        return self.future(request_iterator, **kwargs).result()
+
+    def with_call(self, request_iterator, **kwargs):
+        future = self.future(request_iterator, **kwargs)
+        return future.result(), future
+
+    def future(self, request_iterator, **kwargs):
+        call = cygrpc.grpc_run_in_event_loop_thread(
+            lambda: self._async_multicallable(**kwargs))
+        return _ShadowRendezvous(call, request_iterator=request_iterator)
+
+
+class _StreamStreamMultiCallable(grpc.StreamStreamMultiCallable):
+
+    def __init__(self, async_multicallable):
+        self._async_multicallable = async_multicallable
+
+    def __call__(self, request_iterator, **kwargs):
+        call = cygrpc.grpc_run_in_event_loop_thread(
+            lambda: self._async_multicallable(**kwargs))
+        return _ShadowRendezvous(call, request_iterator)
 
 
 class Channel(grpc.Channel):
     """A cygrpc.Channel-backed implementation of grpc.Channel."""
 
     def __init__(self, target, options, credentials, compression):
-        """Constructor.
-
-        Args:
-          target: The target to which to connect.
-          options: Configuration options for the channel.
-          credentials: A cygrpc.ChannelCredentials or None.
-          compression: An optional value indicating the compression method to be
-            used over the lifetime of the channel.
-        """
         self._async_channel = aio._channel.Channel(target, options, credentials,
                                                    compression, None)
 
@@ -181,22 +208,28 @@ class Channel(grpc.Channel):
                      method,
                      request_serializer=None,
                      response_deserializer=None):
-        pass
+        async_multicallable = self._async_channel.unary_stream(
+            method, request_serializer, response_deserializer)
+        return _UnaryStreamMultiCallable(async_multicallable)
 
     def stream_unary(self,
                      method,
                      request_serializer=None,
                      response_deserializer=None):
-        pass
+        async_multicallable = self._async_channel.stream_unary(
+            method, request_serializer, response_deserializer)
+        return _StreamUnaryMultiCallable(async_multicallable)
 
     def stream_stream(self,
                       method,
                       request_serializer=None,
                       response_deserializer=None):
-        pass
+        async_multicallable = self._async_channel.stream_stream(
+            method, request_serializer, response_deserializer)
+        return _StreamStreamMultiCallable(async_multicallable)
 
     def _close(self):
-        cygrpc.grpc_schedule_coroutine(self._async_channel.close()).result()
+        return cygrpc.grpc_await(self._async_channel.close())
 
     def __enter__(self):
         return self

@@ -92,6 +92,16 @@ def grpc_run_in_event_loop_thread(object func):
         return asyncio.run_coroutine_threadsafe(wrapper(), _grpc_aio_loop).result()
 
 
+def grpc_await(object coro):
+    if _event_loop_thread_ident == threading.current_thread().ident:
+        raise UsageError('Please invoke `grpc_await` on non-event-loop thread')
+
+    async def await_result():
+        return await coro
+
+    return grpc_schedule_coroutine(await_result()).result()
+
+
 def _spawn_background_event_loop():
     loop_ready = threading.Event()
     def async_event_loop():
