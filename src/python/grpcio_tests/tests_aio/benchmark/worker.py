@@ -15,6 +15,9 @@
 import argparse
 import asyncio
 import logging
+import cProfile
+import pstats
+import io
 
 from grpc.experimental import aio
 
@@ -48,6 +51,9 @@ if __name__ == '__main__':
     parser.add_argument('--uvloop',
                         action='store_true',
                         help='Use uvloop or not')
+    parser.add_argument('--profile',
+                        type=str,
+                        help='Generate cProfile to the given location')
     args = parser.parse_args()
 
     if args.uvloop:
@@ -56,4 +62,19 @@ if __name__ == '__main__':
         loop = uvloop.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    asyncio.get_event_loop().run_until_complete(run_worker_server(args.port))
+    if args.profile:
+        with open(args.profile, 'w') as f:
+            pr = cProfile.Profile()
+            pr.enable()
+            try:
+                asyncio.get_event_loop().run_until_complete(
+                    run_worker_server(args.port))
+            finally:
+                pr.disable()
+                s = io.StringIO()
+                ps = pstats.Stats(pr, stream=s).sort_stats('time')
+                ps.print_stats()
+                f.write(s.getvalue())
+    else:
+        asyncio.get_event_loop().run_until_complete(run_worker_server(
+            args.port))
