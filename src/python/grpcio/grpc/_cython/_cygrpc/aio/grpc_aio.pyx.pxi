@@ -73,11 +73,12 @@ cdef _initialize_poller():
 
 cdef _actual_aio_initialization():
     # Picks the engine for gRPC AsyncIO Stack
-    _global_aio_state.engine = AsyncIOEngine.__members__.get(
-        _GRPC_ASYNCIO_ENGINE,
-        _default_asyncio_engine(),
-    )
-    _LOGGER.debug('Using %s as I/O engine', _global_aio_state.engine)
+    if _global_aio_state.engine is None:
+        _global_aio_state.engine = AsyncIOEngine.__members__.get(
+            _GRPC_ASYNCIO_ENGINE,
+            _default_asyncio_engine(),
+        )
+        _LOGGER.debug('Using %s as I/O engine', _global_aio_state.engine)
 
     # Initializes the process-level state accordingly
     if _global_aio_state.engine is AsyncIOEngine.CUSTOM_IO_MANAGER:
