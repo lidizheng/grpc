@@ -217,7 +217,6 @@ _PythonConfigVars = collections.namedtuple('_ConfigVars', [
 
 
 def _python_config_generator(name, major, minor, bits, config_vars):
-    name += '_' + config_vars.iomgr_platform
     return PythonConfig(
         name, config_vars.shell + config_vars.builder +
         config_vars.builder_prefix_arguments +
