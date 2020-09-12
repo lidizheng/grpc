@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">GRPC C++
-   &#160;<span id="projectnumber">1.31.1</span>
+   &#160;<span id="projectnumber">1.33.0-dev</span>
    </div>
   </td>
  </tr>
@@ -76,12 +76,12 @@ $(function() {
 <p>A wrapper class of an application provided bidi-streaming handler.  
  <a href="classgrpc__impl_1_1internal_1_1_templated_bidi_streaming_handler.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="impl_2codegen_2completion__queue__impl_8h_source.html">completion_queue_impl.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="grpcpp_2impl_2codegen_2completion__queue_8h_source.html">completion_queue.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a71f62110b261b500aaec957cb86b060a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgrpc__impl_1_1internal_1_1_templated_bidi_streaming_handler.html#a71f62110b261b500aaec957cb86b060a">TemplatedBidiStreamingHandler</a> (std::function&lt;::<a class="el" href="classgrpc_1_1_status.html">grpc::Status</a>(::<a class="el" href="classgrpc__impl_1_1_server_context.html">grpc_impl::ServerContext</a> *, Streamer *)&gt; func)</td></tr>
-<tr class="separator:a71f62110b261b500aaec957cb86b060a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59db2de83827563f075ddeb1de4c5e49"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgrpc__impl_1_1internal_1_1_templated_bidi_streaming_handler.html#a59db2de83827563f075ddeb1de4c5e49">TemplatedBidiStreamingHandler</a> (std::function&lt;::<a class="el" href="classgrpc_1_1_status.html">grpc::Status</a>(::<a class="el" href="classgrpc_1_1_server_context.html">grpc::ServerContext</a> *, Streamer *)&gt; func)</td></tr>
+<tr class="separator:a59db2de83827563f075ddeb1de4c5e49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1035e0441e22ef329f8b6677d07e3eea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgrpc__impl_1_1internal_1_1_templated_bidi_streaming_handler.html#a1035e0441e22ef329f8b6677d07e3eea">RunHandler</a> (const HandlerParameter &amp;param) final</td></tr>
 <tr class="separator:a1035e0441e22ef329f8b6677d07e3eea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -92,8 +92,8 @@ class grpc_impl::internal::TemplatedBidiStreamingHandler&lt; Streamer, WriteNeed
 <p>A wrapper class of an application provided bidi-streaming handler. </p>
 <p>This also applies to server-streamed implementation of a unary method with the additional requirement that such methods must have done a write for status to be ok Since this is used by more than 1 class, the service is not passed in. Instead, it is expected to be an implicitly-captured argument of func (through bind or something along those lines) </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a71f62110b261b500aaec957cb86b060a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a71f62110b261b500aaec957cb86b060a">&#9670;&nbsp;</a></span>TemplatedBidiStreamingHandler()</h2>
+<a id="a59db2de83827563f075ddeb1de4c5e49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59db2de83827563f075ddeb1de4c5e49">&#9670;&nbsp;</a></span>TemplatedBidiStreamingHandler()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -106,7 +106,7 @@ template&lt;class Streamer , bool WriteNeeded&gt; </div>
         <tr>
           <td class="memname"><a class="el" href="classgrpc__impl_1_1internal_1_1_templated_bidi_streaming_handler.html">grpc_impl::internal::TemplatedBidiStreamingHandler</a>&lt; Streamer, WriteNeeded &gt;::<a class="el" href="classgrpc__impl_1_1internal_1_1_templated_bidi_streaming_handler.html">TemplatedBidiStreamingHandler</a> </td>
           <td>(</td>
-          <td class="paramtype">std::function&lt;::<a class="el" href="classgrpc_1_1_status.html">grpc::Status</a>(::<a class="el" href="classgrpc__impl_1_1_server_context.html">grpc_impl::ServerContext</a> *, Streamer *)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt;::<a class="el" href="classgrpc_1_1_status.html">grpc::Status</a>(::<a class="el" href="classgrpc_1_1_server_context.html">grpc::ServerContext</a> *, Streamer *)&gt;&#160;</td>
           <td class="paramname"><em>func</em></td><td>)</td>
           <td></td>
         </tr>
@@ -150,13 +150,13 @@ template&lt;class Streamer , bool WriteNeeded&gt; </div>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>include/grpcpp/impl/codegen/<a class="el" href="impl_2codegen_2completion__queue__impl_8h_source.html">completion_queue_impl.h</a></li>
+<li>include/grpcpp/impl/codegen/<a class="el" href="grpcpp_2impl_2codegen_2completion__queue_8h_source.html">completion_queue.h</a></li>
 <li>include/grpcpp/impl/codegen/<a class="el" href="grpcpp_2impl_2codegen_2method__handler__impl_8h_source.html">method_handler_impl.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Aug 18 2020 16:24:48 for GRPC C++ by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Sep 12 2020 01:01:18 for GRPC C++ by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>

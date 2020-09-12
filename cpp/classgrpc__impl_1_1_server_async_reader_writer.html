@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">GRPC C++
-   &#160;<span id="projectnumber">1.31.1</span>
+   &#160;<span id="projectnumber">1.33.0-dev</span>
    </div>
   </td>
  </tr>
@@ -81,8 +81,8 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a071dc26c7280086da06ac852f2b26121"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgrpc__impl_1_1_server_async_reader_writer.html#a071dc26c7280086da06ac852f2b26121">ServerAsyncReaderWriter</a> (::<a class="el" href="classgrpc__impl_1_1_server_context.html">grpc_impl::ServerContext</a> *ctx)</td></tr>
-<tr class="separator:a071dc26c7280086da06ac852f2b26121"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6187cbf2da5379a7020125d194abd49e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgrpc__impl_1_1_server_async_reader_writer.html#a6187cbf2da5379a7020125d194abd49e">ServerAsyncReaderWriter</a> (::<a class="el" href="classgrpc_1_1_server_context.html">grpc::ServerContext</a> *ctx)</td></tr>
+<tr class="separator:a6187cbf2da5379a7020125d194abd49e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13487e7392a5c1f64f293583e6b99e10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgrpc__impl_1_1_server_async_reader_writer.html#a13487e7392a5c1f64f293583e6b99e10">SendInitialMetadata</a> (void *tag) override</td></tr>
 <tr class="memdesc:a13487e7392a5c1f64f293583e6b99e10"><td class="mdescLeft">&#160;</td><td class="mdescRight">See <em>ServerAsyncStreamingInterface::SendInitialMetadata</em> for semantics.  <a href="classgrpc__impl_1_1_server_async_reader_writer.html#a13487e7392a5c1f64f293583e6b99e10">More...</a><br /></td></tr>
 <tr class="separator:a13487e7392a5c1f64f293583e6b99e10"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,8 +116,8 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a3e6ceb26728f815024f4e836b9ffd56f"><td class="memItemLeft" align="right" valign="top">class&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgrpc__impl_1_1_server_async_reader_writer.html#a3e6ceb26728f815024f4e836b9ffd56f">::grpc_impl::Server</a></td></tr>
-<tr class="separator:a3e6ceb26728f815024f4e836b9ffd56f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c3fa4c066981aae114e41c3f9340144"><td class="memItemLeft" align="right" valign="top">class&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgrpc__impl_1_1_server_async_reader_writer.html#a8c3fa4c066981aae114e41c3f9340144">::grpc::Server</a></td></tr>
+<tr class="separator:a8c3fa4c066981aae114e41c3f9340144"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;class W, class R&gt;<br />
@@ -125,8 +125,8 @@ class grpc_impl::ServerAsyncReaderWriter&lt; W, R &gt;</h3>
 
 <p>Async server-side API for doing bidirectional streaming RPCs, where the incoming message stream coming from the client has messages of type <em>R</em>, and the outgoing message stream coming from the server has messages of type <em>W</em>. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a071dc26c7280086da06ac852f2b26121"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a071dc26c7280086da06ac852f2b26121">&#9670;&nbsp;</a></span>ServerAsyncReaderWriter()</h2>
+<a id="a6187cbf2da5379a7020125d194abd49e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6187cbf2da5379a7020125d194abd49e">&#9670;&nbsp;</a></span>ServerAsyncReaderWriter()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -139,7 +139,7 @@ template&lt;class W , class R &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="classgrpc__impl_1_1_server_async_reader_writer.html">grpc_impl::ServerAsyncReaderWriter</a>&lt; W, R &gt;::<a class="el" href="classgrpc__impl_1_1_server_async_reader_writer.html">ServerAsyncReaderWriter</a> </td>
           <td>(</td>
-          <td class="paramtype">::<a class="el" href="classgrpc__impl_1_1_server_context.html">grpc_impl::ServerContext</a> *&#160;</td>
+          <td class="paramtype">::<a class="el" href="classgrpc_1_1_server_context.html">grpc::ServerContext</a> *&#160;</td>
           <td class="paramname"><em>ctx</em></td><td>)</td>
           <td></td>
         </tr>
@@ -192,7 +192,7 @@ template&lt;class W , class R &gt; </div>
 
 <p>See the <em><a class="el" href="classgrpc__impl_1_1_server_async_reader_writer_interface.html#a706884d5e0d977b056710c5f09fb219a" title="Indicate that the stream is to be finished with a certain status code.">ServerAsyncReaderWriterInterface.Finish</a></em> method for semantics. </p>
 <p>Implicit input parameter:</p><ul>
-<li>the <em><a class="el" href="classgrpc__impl_1_1_server_context.html" title="A ServerContext or CallbackServerContext allows the code implementing a service handler to:">ServerContext</a></em> associated with this call is used for sending trailing (and initial if not already sent) metadata to the client.</li>
+<li>the <em>ServerContext</em> associated with this call is used for sending trailing (and initial if not already sent) metadata to the client.</li>
 </ul>
 <p>Note: there are no restrictions are the code of <em>status</em>, it may be non-OK gRPC doesn't take ownership or a reference to <em>status</em>, so it is safe to to deallocate once Finish returns. </p>
 
@@ -279,7 +279,7 @@ template&lt;class W , class R &gt; </div>
 
 <p>See <em>ServerAsyncStreamingInterface::SendInitialMetadata</em> for semantics. </p>
 <p>Implicit input parameter:</p><ul>
-<li>The initial metadata that will be sent to the client from this op will be taken from the <em><a class="el" href="classgrpc__impl_1_1_server_context.html" title="A ServerContext or CallbackServerContext allows the code implementing a service handler to:">ServerContext</a></em> associated with the call.</li>
+<li>The initial metadata that will be sent to the client from this op will be taken from the <em>ServerContext</em> associated with the call.</li>
 </ul>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -451,7 +451,7 @@ template&lt;class W , class R &gt; </div>
 
 <p>See the <em><a class="el" href="classgrpc__impl_1_1_server_async_reader_writer_interface.html#a10995d9b1f2fff99acb2a349b5f91023" title="Request the writing of msg and coalesce it with trailing metadata which contains status,...">ServerAsyncReaderWriterInterface.WriteAndFinish</a></em> method for semantics. </p>
 <p>Implicit input parameter:</p><ul>
-<li>the <em><a class="el" href="classgrpc__impl_1_1_server_context.html" title="A ServerContext or CallbackServerContext allows the code implementing a service handler to:">ServerContext</a></em> associated with this call is used for sending trailing (and initial) metadata to the client.</li>
+<li>the <em>ServerContext</em> associated with this call is used for sending trailing (and initial) metadata to the client.</li>
 </ul>
 <p>Note: <em>status</em> must have an OK code. gRPC doesn't take ownership or a reference to <em>msg</em> and <em>status</em>, so it is safe to deallocate once WriteAndFinish returns. </p>
 
@@ -460,8 +460,8 @@ template&lt;class W , class R &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Friends And Related Function Documentation</h2>
-<a id="a3e6ceb26728f815024f4e836b9ffd56f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3e6ceb26728f815024f4e836b9ffd56f">&#9670;&nbsp;</a></span>::grpc_impl::Server</h2>
+<a id="a8c3fa4c066981aae114e41c3f9340144"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c3fa4c066981aae114e41c3f9340144">&#9670;&nbsp;</a></span>::grpc::Server</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -472,7 +472,7 @@ template&lt;class W , class R &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">friend class ::<a class="el" href="classgrpc__impl_1_1_server.html">grpc_impl::Server</a></td>
+          <td class="memname">friend class ::<a class="el" href="classgrpc_1_1_server.html">grpc::Server</a></td>
         </tr>
       </table>
   </td>
@@ -490,7 +490,7 @@ template&lt;class W , class R &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Aug 18 2020 16:24:48 for GRPC C++ by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Sep 12 2020 01:01:18 for GRPC C++ by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.17
 </small></address>
