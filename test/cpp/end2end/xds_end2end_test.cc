@@ -4839,7 +4839,7 @@ TEST_P(LdsRdsTest, XdsRoutingFaultInjectionPercentageDelay) {
   const uint32_t kRpcTimeoutMilliseconds = 10;  // 10 ms
   const uint32_t kDelayPercentagePerHundred = 95;
   const double kDelayRate = kDelayPercentagePerHundred / 100.0;
-  const double kErrorTolerance = 0.05;
+  const double kErrorTolerance = 0.2;
   SetNextResolution({});
   SetNextResolutionForLbChannelAllBalancers();
   // Create an EDS resource
