@@ -5139,7 +5139,7 @@ TEST_P(LdsRdsTest, XdsRoutingListenerFaultInjectionPercentageDelay) {
   gpr_setenv("GRPC_XDS_EXPERIMENTAL_FAULT_INJECTION", "true");
   const size_t kNumRpcs = 500;
   const uint32_t kFixedDelaySeconds = 4;
-  const uint32_t kRpcTimeoutMilliseconds = 1000;  // 1 second
+  const uint32_t kRpcTimeoutMilliseconds = 10;  // 10 ms
   const uint32_t kDelayPercentagePerHundred = 95;
   const double kDelayRate = kDelayPercentagePerHundred / 100.0;
   const double kErrorTolerance = 0.05;
@@ -5182,7 +5182,7 @@ TEST_P(LdsRdsTest, XdsRoutingListenerFaultInjectionPercentageDelayViaHeaders) {
   gpr_setenv("GRPC_XDS_EXPERIMENTAL_FAULT_INJECTION", "true");
   const size_t kNumRpcs = 500;
   const uint32_t kFixedDelayMilliseconds = 4000;  // 4 seconds
-  const uint32_t kRpcTimeoutMilliseconds = 1000;  // 1 second
+  const uint32_t kRpcTimeoutMilliseconds = 10;    // 10 ms
   const uint32_t kDelayPercentagePerMillion = 950000;
   const double kDelayRate = kDelayPercentagePerMillion / 1000000.0;
   const double kErrorTolerance = 0.05;
