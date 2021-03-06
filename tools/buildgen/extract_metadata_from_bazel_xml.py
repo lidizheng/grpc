@@ -41,8 +41,8 @@ from typing import List, Any, Dict, Optional, Iterable
 
 import build_cleaner
 
-PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
-                            "..")
+PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
+                            '..')
 os.chdir(PROJECT_ROOT)
 
 BuildMetadata = Dict[str, Any]
@@ -51,11 +51,11 @@ BuildYaml = Dict[str, Any]
 
 # Map from the external repository's labels to their path prefixes.
 EXTERNAL_LIB_LABEL_PATH_MAP = dict(
-    envoy_api="third_party/envoy-api/",
-    com_google_googleapis="third_party/googleapis/",
-    com_github_cncf_udpa="third_party/udpa/",
-    com_envoyproxy_protoc_gen_validate="third_party/protoc-gen-validate/",
-    opencensus_proto="third_party/opencensus-proto/src/")
+    envoy_api='third_party/envoy-api/',
+    com_google_googleapis='third_party/googleapis/',
+    com_github_cncf_udpa='third_party/udpa/',
+    com_envoyproxy_protoc_gen_validate='third_party/protoc-gen-validate/',
+    opencensus_proto='third_party/opencensus-proto/src/')
 # The external repositories that we are currently able to support the metadata
 # extraction. We aim to support arbitrary external libraries in the long term.
 # This variable should be removed eventually.
@@ -268,27 +268,27 @@ def _compute_transitive_metadata(
     All other intermediate dependencies will be merged, which means their
     source file, headers, etc. will be collected into one build target. This
     step of processing will greatly reduce the complexity of the generated
-    CMake build files.
+    build specifications for other build systems, like CMake, Make, setuptools.
 
     The final build metadata are:
     * _TRANSITIVE_DEPS: all the transitive dependencies including intermediate
                         targets;
     * _COLLAPSED_DEPS:  dependencies that fits our requirement above, and it
                         will remove duplicated items and produce the shortest
-                        possible dependency list;
+                        possible dependency list in alphabetical order;
     * _COLLAPSED_SRCS:  the merged source files;
     * _COLLAPSED_PUBLIC_HEADERS: the merged public headers;
     * _COLLAPSED_HEADERS: the merged non-public headers.
     * _EXCLUDE_DEPS: the intermediate dependency labels.
 
-    For the new collapsed_deps, the new algorithm improved cases like:
+    For the collapsed_deps, the algorithm improved cases like:
 
-    The previous result:
+    The result in the past:
         end2end_tests -> [grpc_test_util, grpc, gpr, address_sorting, upb]
         grpc_test_util -> [grpc, gpr, address_sorting, upb, ...]
         grpc -> [gpr, address_sorting, upb, ...]
     
-    The new result:
+    The result of the algorithm:
         end2end_tests -> [grpc_test_util]
         grpc_test_util -> [grpc]
         grpc -> [gpr, address_sorting, upb, ...]
@@ -308,8 +308,8 @@ def _compute_transitive_metadata(
         external_dep_name_maybe = _external_dep_name_from_bazel_dependency(dep)
 
         if dep in bazel_rules:
-            # The follow if is used to suppress expanding absl libs; expanding
-            # absl deps are technically correct but creates too many noise
+            # Suppress expanding absl libs; expanding absl deps are technically
+            # correct but creates too much noise
             if external_dep_name_maybe is None or not external_dep_name_maybe.startswith(
                     'absl'):
                 if "_PROCESSING_DONE" not in bazel_rules[dep]:
@@ -345,7 +345,22 @@ def _compute_transitive_metadata(
     collapsed_deps = list(
         filter(lambda x: x not in exclude_deps, collapsed_deps))
 
-    # Compute the final source files and headers, without all intermediate dependencies.
+    # Compute the final source files and headers for this build target whose
+    # name is `rule_name` (input argument of this function).
+    #
+    # Imaging a build target X has transitive deps [A, B, C, D, E]. C and E are
+    # public build targets. And D is a transitive dependency of C.
+    #
+    # Translate the condition into dependency graph:
+    #   X -> [A, B, C, D, E]
+    #   C -> [D]
+    #   Public targets [X, C, E]
+    #
+    # The collapsed dependencies of X: [C, E].
+    # The excluded dependencies of X: [C, D, E].
+    #
+    # Target X should include source files and headers of [X, A, B] as final
+    # build.
     for dep in transitive_deps:
         if dep not in exclude_deps:
             if dep in bazel_rules:
@@ -356,18 +371,26 @@ def _compute_transitive_metadata(
                     _extract_nonpublic_headers(bazel_rules[dep]))
 
     # This item is a "visited" flag
-    bazel_rule["_PROCESSING_DONE"] = True
+    bazel_rule['_PROCESSING_DONE'] = True
     # Following items are described in the docstinrg.
-    bazel_rule["_TRANSITIVE_DEPS"] = transitive_deps
-    bazel_rule["_COLLAPSED_DEPS"] = collapsed_deps
-    bazel_rule["_COLLAPSED_SRCS"] = list(sorted(collapsed_srcs))
-    bazel_rule["_COLLAPSED_PUBLIC_HEADERS"] = list(
+    bazel_rule['_TRANSITIVE_DEPS'] = transitive_deps
+    bazel_rule['_COLLAPSED_DEPS'] = list(sorted(collapsed_deps))
+    bazel_rule['_COLLAPSED_SRCS'] = list(sorted(collapsed_srcs))
+    bazel_rule['_COLLAPSED_PUBLIC_HEADERS'] = list(
         sorted(collapsed_public_headers))
-    bazel_rule["_COLLAPSED_HEADERS"] = list(sorted(collapsed_headers))
-    bazel_rule["_EXCLUDE_DEPS"] = list(sorted(exclude_deps))
+    bazel_rule['_COLLAPSED_HEADERS'] = list(sorted(collapsed_headers))
+    bazel_rule['_EXCLUDE_DEPS'] = list(sorted(exclude_deps))
 
 
 # TODO(jtattermusch): deduplicate with transitive_dependencies.py (which has a slightly different logic)
+# TODO(jtattermusch): This is done to avoid introducing too many intermediate
+# libraries into the build.yaml-based builds (which might in cause issues
+# building language-specific artifacts) and also because the libraries
+# in build.yaml-based build are generally considered units of distributions
+# (= public libraries that are visible to the user and are installable),
+# while in bazel builds it is customary to define larger number of smaller
+# "sublibraries". The need for elision (and expansion)
+# of intermediate libraries can be re-evaluated in the future.
 def _populate_transitive_metadata(bazel_rules: Any,
                                   public_dep_names: Iterable[str]) -> None:
     """Add 'transitive_deps' field for each of the rules"""
@@ -379,18 +402,14 @@ def _populate_transitive_metadata(bazel_rules: Any,
     # Make sure we reached all the Bazel rules
     # TODO(lidiz) potentially we could only update a subset of rules
     for rule_name in bazel_rules:
-        if "_PROCESSING_DONE" not in bazel_rules[rule_name]:
+        if '_PROCESSING_DONE' not in bazel_rules[rule_name]:
             _compute_transitive_metadata(rule_name, bazel_rules,
                                          bazel_label_to_dep_name)
 
 
 def update_test_metadata_with_transitive_metadata(
         all_extra_metadata: BuildDict, bazel_rules: BuildDict) -> None:
-    """Patches test build metdata with transitive metadata.
-    
-    Logics in this PR was part of `_generate_build_extra_metadata_for_tests`,
-    but to merge the metadata computation we need to split them out.
-    """
+    """Patches test build metadata with transitive metadata."""
     for lib_name, lib_dict in all_extra_metadata.items():
         # Skip if it isn't not an test
         if lib_dict.get('build') != 'test' or lib_dict.get('_TYPE') != 'target':
@@ -415,20 +434,6 @@ def _generate_build_metadata(build_extra_metadata: BuildDict,
 
     for lib_name in lib_names:
         lib_dict = _create_target_from_bazel_rule(lib_name, bazel_rules)
-
-        # Figure out the final list of headers and sources for given target.
-        # While this is mostly based on bazel build metadata, build.yaml does
-        # not necessarily expose all the targets that are present in bazel build.
-        # These "intermediate dependencies" might get flattened.
-        # TODO(jtattermusch): This is done to avoid introducing too many intermediate
-        # libraries into the build.yaml-based builds (which might in cause issues
-        # building language-specific artifacts) and also because the libraries
-        # in build.yaml-based build are generally considered units of distributions
-        # (= public libraries that are visible to the user and are installable),
-        # while in bazel builds it is customary to define larger number of smaller
-        # "sublibraries". The need for elision (and expansion)
-        # of intermediate libraries can be re-evaluated in the future.
-        # _expand_intermediate_deps(lib_dict, lib_names, bazel_rules)
 
         # populate extra properties from the build.yaml-specific "extra metadata"
         lib_dict.update(build_extra_metadata.get(lib_name, {}))
@@ -1101,8 +1106,8 @@ all_extra_metadata.update(_BUILD_EXTRA_METADATA)
 all_extra_metadata.update(
     _generate_build_extra_metadata_for_tests(tests, bazel_rules))
 
-# Step 4: Compute the build metdata that will be used in the final build.yaml.
-# The final build metdata includes transitive dependencies, and sources/headers
+# Step 4: Compute the build metadata that will be used in the final build.yaml.
+# The final build metadata includes transitive dependencies, and sources/headers
 # expanded without intermediate dependencies.
 # Example:
 # '//:grpc' : { ...,
@@ -1114,7 +1119,9 @@ all_extra_metadata.update(
 #             }
 _populate_transitive_metadata(bazel_rules, all_extra_metadata.keys())
 
-# Step 4a: Update the exist test metadata with the updated build metdata.
+# Step 4a: Update the existing test metadata with the updated build metadata.
+# Certain build metadata of certain test targets depend on the transitive
+# metadata that wasn't available earlier.
 update_test_metadata_with_transitive_metadata(all_extra_metadata, bazel_rules)
 
 # Step 5: Generate the final metadata for all the targets.

@@ -432,13 +432,13 @@
       'target_name': 'grpc',
       'type': 'static_library',
       'dependencies': [
-        'gpr',
         'absl/container:flat_hash_map',
         'absl/container:inlined_vector',
-        'absl/status:statusor',
-        'upb',
-        'address_sorting',
         'absl/functional:bind_front',
+        'absl/status:statusor',
+        'gpr',
+        'address_sorting',
+        'upb',
       ],
       'sources': [
         'src/core/ext/filters/census/grpc_context.cc',
@@ -988,10 +988,10 @@
       'target_name': 'grpc_test_util',
       'type': 'static_library',
       'dependencies': [
-        'grpc',
+        'absl/debugging:failure_signal_handler',
         'absl/debugging:stacktrace',
         'absl/debugging:symbolize',
-        'absl/debugging:failure_signal_handler',
+        'grpc',
       ],
       'sources': [
         'test/core/util/cmdline.cc',
@@ -1023,10 +1023,10 @@
       'target_name': 'grpc_test_util_unsecure',
       'type': 'static_library',
       'dependencies': [
-        'grpc_unsecure',
+        'absl/debugging:failure_signal_handler',
         'absl/debugging:stacktrace',
         'absl/debugging:symbolize',
-        'absl/debugging:failure_signal_handler',
+        'grpc_unsecure',
       ],
       'sources': [
         'test/core/util/cmdline.cc',
@@ -1057,12 +1057,12 @@
       'target_name': 'grpc_unsecure',
       'type': 'static_library',
       'dependencies': [
-        'gpr',
         'absl/container:flat_hash_map',
         'absl/container:inlined_vector',
         'absl/status:statusor',
-        'upb',
+        'gpr',
         'address_sorting',
+        'upb',
       ],
       'sources': [
         'src/core/ext/filters/census/grpc_context.cc',
@@ -1349,8 +1349,8 @@
       'target_name': 'benchmark_helpers',
       'type': 'static_library',
       'dependencies': [
-        'grpc++_unsecure',
         'benchmark',
+        'grpc++_unsecure',
         'grpc_test_util_unsecure',
         'grpc++_test_config',
       ],
@@ -1467,8 +1467,8 @@
       'target_name': 'grpc++_test_config',
       'type': 'static_library',
       'dependencies': [
-        'gpr',
         'absl/flags:parse',
+        'gpr',
       ],
       'sources': [
         'test/cpp/util/test_config_cc.cc',
@@ -1478,9 +1478,9 @@
       'target_name': 'grpc++_test_util',
       'type': 'static_library',
       'dependencies': [
+        'absl/flags:flag',
         'grpc++',
         'grpc_test_util',
-        'absl/flags:flag',
       ],
       'sources': [
         'test/core/end2end/data/client_certs.cc',

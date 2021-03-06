@@ -2438,14 +2438,14 @@ target_link_libraries(grpc
   ${_gRPC_RE2_LIBRARIES}
   ${_gRPC_UPB_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
-  gpr
   absl::flat_hash_map
   absl::inlined_vector
-  absl::statusor
-  upb
-  address_sorting
-  ${_gRPC_SSL_LIBRARIES}
   absl::bind_front
+  absl::statusor
+  gpr
+  ${_gRPC_SSL_LIBRARIES}
+  address_sorting
+  upb
 )
 if(_gRPC_PLATFORM_IOS OR _gRPC_PLATFORM_MAC)
   target_link_libraries(grpc "-framework CoreFoundation")
@@ -2582,10 +2582,10 @@ target_include_directories(grpc_test_util
 )
 target_link_libraries(grpc_test_util
   ${_gRPC_ALLTARGETS_LIBRARIES}
-  grpc
+  absl::failure_signal_handler
   absl::stacktrace
   absl::symbolize
-  absl::failure_signal_handler
+  grpc
 )
 if(_gRPC_PLATFORM_IOS OR _gRPC_PLATFORM_MAC)
   target_link_libraries(grpc_test_util "-framework CoreFoundation")
@@ -2650,10 +2650,10 @@ target_include_directories(grpc_test_util_unsecure
 )
 target_link_libraries(grpc_test_util_unsecure
   ${_gRPC_ALLTARGETS_LIBRARIES}
-  grpc_unsecure
+  absl::failure_signal_handler
   absl::stacktrace
   absl::symbolize
-  absl::failure_signal_handler
+  grpc_unsecure
 )
 if(_gRPC_PLATFORM_IOS OR _gRPC_PLATFORM_MAC)
   target_link_libraries(grpc_test_util_unsecure "-framework CoreFoundation")
@@ -2979,12 +2979,12 @@ target_link_libraries(grpc_unsecure
   ${_gRPC_RE2_LIBRARIES}
   ${_gRPC_UPB_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
-  gpr
   absl::flat_hash_map
   absl::inlined_vector
   absl::statusor
-  upb
+  gpr
   address_sorting
+  upb
 )
 if(_gRPC_PLATFORM_IOS OR _gRPC_PLATFORM_MAC)
   target_link_libraries(grpc_unsecure "-framework CoreFoundation")
@@ -3077,8 +3077,8 @@ target_include_directories(benchmark_helpers
 target_link_libraries(benchmark_helpers
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
-  grpc++_unsecure
   ${_gRPC_BENCHMARK_LIBRARIES}
+  grpc++_unsecure
   grpc_test_util_unsecure
   grpc++_test_config
 )
@@ -3673,8 +3673,8 @@ target_include_directories(grpc++_test_config
 target_link_libraries(grpc++_test_config
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
-  gpr
   absl::flags_parse
+  gpr
 )
 
 
@@ -3729,9 +3729,9 @@ target_include_directories(grpc++_test_util
 target_link_libraries(grpc++_test_util
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc++
   grpc_test_util
-  absl::flags
 )
 
 
@@ -8061,8 +8061,8 @@ if(_gRPC_PLATFORM_LINUX OR _gRPC_PLATFORM_POSIX)
   target_link_libraries(alts_concurrent_connectivity_test
     ${_gRPC_PROTOBUF_LIBRARIES}
     ${_gRPC_ALLTARGETS_LIBRARIES}
-    grpc_test_util
     grpc++
+    grpc_test_util
   )
 
 
@@ -8983,8 +8983,8 @@ if(_gRPC_PLATFORM_LINUX OR _gRPC_PLATFORM_MAC OR _gRPC_PLATFORM_POSIX)
   target_link_libraries(bm_fullstack_trickle
     ${_gRPC_PROTOBUF_LIBRARIES}
     ${_gRPC_ALLTARGETS_LIBRARIES}
-    benchmark_helpers
     absl::flags
+    benchmark_helpers
   )
 
 
@@ -10835,8 +10835,8 @@ target_include_directories(grpc_cli
 target_link_libraries(grpc_cli
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
-  grpc++
   absl::flags
+  grpc++
   grpc++_test_config
 )
 
@@ -11817,8 +11817,8 @@ target_include_directories(interop_server
 target_link_libraries(interop_server
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
-  grpc++_test_util
   grpc++_test_config
+  grpc++_test_util
 )
 
 
@@ -14478,10 +14478,10 @@ if(_gRPC_PLATFORM_LINUX OR _gRPC_PLATFORM_MAC OR _gRPC_PLATFORM_POSIX)
   target_link_libraries(writes_per_rpc_test
     ${_gRPC_PROTOBUF_LIBRARIES}
     ${_gRPC_ALLTARGETS_LIBRARIES}
-    grpc++
+    absl::failure_signal_handler
     absl::stacktrace
     absl::symbolize
-    absl::failure_signal_handler
+    grpc++
   )
 
 
@@ -15382,10 +15382,10 @@ target_include_directories(xds_interop_client
 target_link_libraries(xds_interop_client
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc++
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15431,10 +15431,10 @@ target_include_directories(xds_interop_server
 target_link_libraries(xds_interop_server
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc++
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15469,9 +15469,9 @@ target_include_directories(alts_credentials_fuzzer_one_entry
 target_link_libraries(alts_credentials_fuzzer_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15506,9 +15506,9 @@ target_include_directories(client_fuzzer_one_entry
 target_link_libraries(client_fuzzer_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15543,9 +15543,9 @@ target_include_directories(hpack_parser_fuzzer_test_one_entry
 target_link_libraries(hpack_parser_fuzzer_test_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15580,9 +15580,9 @@ target_include_directories(http_request_fuzzer_test_one_entry
 target_link_libraries(http_request_fuzzer_test_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15617,9 +15617,9 @@ target_include_directories(http_response_fuzzer_test_one_entry
 target_link_libraries(http_response_fuzzer_test_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15654,9 +15654,9 @@ target_include_directories(json_fuzzer_test_one_entry
 target_link_libraries(json_fuzzer_test_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15691,9 +15691,9 @@ target_include_directories(nanopb_fuzzer_response_test_one_entry
 target_link_libraries(nanopb_fuzzer_response_test_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15728,9 +15728,9 @@ target_include_directories(nanopb_fuzzer_serverlist_test_one_entry
 target_link_libraries(nanopb_fuzzer_serverlist_test_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15765,9 +15765,9 @@ target_include_directories(percent_decode_fuzzer_one_entry
 target_link_libraries(percent_decode_fuzzer_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15802,9 +15802,9 @@ target_include_directories(percent_encode_fuzzer_one_entry
 target_link_libraries(percent_encode_fuzzer_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15839,9 +15839,9 @@ target_include_directories(server_fuzzer_one_entry
 target_link_libraries(server_fuzzer_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15876,9 +15876,9 @@ target_include_directories(ssl_server_fuzzer_one_entry
 target_link_libraries(ssl_server_fuzzer_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15913,9 +15913,9 @@ target_include_directories(uri_fuzzer_test_one_entry
 target_link_libraries(uri_fuzzer_test_one_entry
   ${_gRPC_PROTOBUF_LIBRARIES}
   ${_gRPC_ALLTARGETS_LIBRARIES}
+  absl::flags
   grpc_test_util
   grpc++_test_config
-  absl::flags
 )
 
 
@@ -15989,7 +15989,7 @@ generate_pkgconfig(
   "high performance general RPC framework"
   "${gRPC_CORE_VERSION}"
   "gpr openssl"
-  "-lgrpc -laddress_sorting -lre2 -lupb -lcares -lz -labsl_statusor -labsl_raw_hash_set -labsl_hashtablez_sampler -labsl_exponential_biased -labsl_hash -labsl_bad_variant_access -labsl_city -labsl_synchronization -labsl_time -labsl_time_zone -labsl_civil_time -labsl_graphcycles_internal -labsl_status -labsl_cord -labsl_str_format_internal -labsl_bad_optional_access -labsl_symbolize -labsl_strings -labsl_strings_internal -labsl_int128 -labsl_demangle_internal -labsl_malloc_internal -labsl_stacktrace -labsl_debugging_internal -labsl_throw_delegate -labsl_base -labsl_spinlock_wait -labsl_raw_logging_internal -labsl_log_severity"
+  "-lgrpc -laddress_sorting -lre2 -lupb -lcares -lz -labsl_statusor -labsl_status -labsl_raw_hash_set -labsl_hashtablez_sampler -labsl_synchronization -labsl_time -labsl_time_zone -labsl_civil_time -labsl_graphcycles_internal -labsl_symbolize -labsl_demangle_internal -labsl_malloc_internal -labsl_stacktrace -labsl_debugging_internal -labsl_exponential_biased -labsl_cord -labsl_str_format_internal -labsl_hash -labsl_bad_variant_access -labsl_bad_optional_access -labsl_strings -labsl_strings_internal -labsl_base -labsl_spinlock_wait -labsl_int128 -labsl_city -labsl_throw_delegate -labsl_raw_logging_internal -labsl_log_severity"
   ""
   "grpc.pc")
 
@@ -15999,7 +15999,7 @@ generate_pkgconfig(
   "high performance general RPC framework without SSL"
   "${gRPC_CORE_VERSION}"
   "gpr"
-  "-lgrpc_unsecure -labsl_statusor -labsl_raw_hash_set -labsl_hashtablez_sampler -labsl_exponential_biased -labsl_hash -labsl_bad_variant_access -labsl_city -labsl_synchronization -labsl_time -labsl_time_zone -labsl_civil_time -labsl_graphcycles_internal -labsl_status -labsl_cord -labsl_str_format_internal -labsl_bad_optional_access -labsl_symbolize -labsl_strings -labsl_strings_internal -labsl_int128 -labsl_demangle_internal -labsl_malloc_internal -labsl_stacktrace -labsl_debugging_internal -labsl_throw_delegate -labsl_base -labsl_spinlock_wait -labsl_raw_logging_internal -labsl_log_severity"
+  "-lgrpc_unsecure -labsl_statusor -labsl_status -labsl_raw_hash_set -labsl_hashtablez_sampler -labsl_synchronization -labsl_time -labsl_time_zone -labsl_civil_time -labsl_graphcycles_internal -labsl_symbolize -labsl_demangle_internal -labsl_malloc_internal -labsl_stacktrace -labsl_debugging_internal -labsl_exponential_biased -labsl_cord -labsl_str_format_internal -labsl_hash -labsl_bad_variant_access -labsl_bad_optional_access -labsl_strings -labsl_strings_internal -labsl_base -labsl_spinlock_wait -labsl_int128 -labsl_city -labsl_throw_delegate -labsl_raw_logging_internal -labsl_log_severity"
   ""
   "grpc_unsecure.pc")
 
@@ -16009,7 +16009,7 @@ generate_pkgconfig(
   "C++ wrapper for gRPC"
   "${gRPC_CPP_VERSION}"
   "grpc"
-  "-lgrpc++ -labsl_statusor -labsl_raw_hash_set -labsl_hashtablez_sampler -labsl_exponential_biased -labsl_hash -labsl_bad_variant_access -labsl_city -labsl_synchronization -labsl_time -labsl_time_zone -labsl_civil_time -labsl_graphcycles_internal -labsl_status -labsl_cord -labsl_str_format_internal -labsl_bad_optional_access -labsl_symbolize -labsl_strings -labsl_strings_internal -labsl_int128 -labsl_demangle_internal -labsl_malloc_internal -labsl_stacktrace -labsl_debugging_internal -labsl_throw_delegate -labsl_base -labsl_spinlock_wait -labsl_raw_logging_internal -labsl_log_severity"
+  "-lgrpc++ -labsl_statusor -labsl_status -labsl_raw_hash_set -labsl_hashtablez_sampler -labsl_synchronization -labsl_time -labsl_time_zone -labsl_civil_time -labsl_graphcycles_internal -labsl_symbolize -labsl_demangle_internal -labsl_malloc_internal -labsl_stacktrace -labsl_debugging_internal -labsl_exponential_biased -labsl_cord -labsl_str_format_internal -labsl_hash -labsl_bad_variant_access -labsl_bad_optional_access -labsl_strings -labsl_strings_internal -labsl_base -labsl_spinlock_wait -labsl_int128 -labsl_city -labsl_throw_delegate -labsl_raw_logging_internal -labsl_log_severity"
   ""
   "grpc++.pc")
 
@@ -16019,6 +16019,6 @@ generate_pkgconfig(
   "C++ wrapper for gRPC without SSL"
   "${gRPC_CPP_VERSION}"
   "grpc_unsecure"
-  "-lgrpc++_unsecure -labsl_statusor -labsl_raw_hash_set -labsl_hashtablez_sampler -labsl_exponential_biased -labsl_hash -labsl_bad_variant_access -labsl_city -labsl_synchronization -labsl_time -labsl_time_zone -labsl_civil_time -labsl_graphcycles_internal -labsl_status -labsl_cord -labsl_str_format_internal -labsl_bad_optional_access -labsl_symbolize -labsl_strings -labsl_strings_internal -labsl_int128 -labsl_demangle_internal -labsl_malloc_internal -labsl_stacktrace -labsl_debugging_internal -labsl_throw_delegate -labsl_base -labsl_spinlock_wait -labsl_raw_logging_internal -labsl_log_severity"
+  "-lgrpc++_unsecure -labsl_statusor -labsl_status -labsl_raw_hash_set -labsl_hashtablez_sampler -labsl_synchronization -labsl_time -labsl_time_zone -labsl_civil_time -labsl_graphcycles_internal -labsl_symbolize -labsl_demangle_internal -labsl_malloc_internal -labsl_stacktrace -labsl_debugging_internal -labsl_exponential_biased -labsl_cord -labsl_str_format_internal -labsl_hash -labsl_bad_variant_access -labsl_bad_optional_access -labsl_strings -labsl_strings_internal -labsl_base -labsl_spinlock_wait -labsl_int128 -labsl_city -labsl_throw_delegate -labsl_raw_logging_internal -labsl_log_severity"
   ""
   "grpc++_unsecure.pc")

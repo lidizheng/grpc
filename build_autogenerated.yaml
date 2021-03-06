@@ -1385,14 +1385,14 @@ libs:
   - src/core/tsi/transport_security.cc
   - src/core/tsi/transport_security_grpc.cc
   deps:
-  - gpr
   - absl/container:flat_hash_map
   - absl/container:inlined_vector
-  - absl/status:statusor
-  - upb
-  - address_sorting
-  - libssl
   - absl/functional:bind_front
+  - absl/status:statusor
+  - gpr
+  - libssl
+  - address_sorting
+  - upb
   baselib: true
   generate_plugin_registry: true
 - name: grpc_csharp_ext
@@ -1455,10 +1455,10 @@ libs:
   - test/core/util/tracer_util.cc
   - test/core/util/trickle_endpoint.cc
   deps:
-  - grpc
+  - absl/debugging:failure_signal_handler
   - absl/debugging:stacktrace
   - absl/debugging:symbolize
-  - absl/debugging:failure_signal_handler
+  - grpc
 - name: grpc_test_util_unsecure
   build: private
   language: c
@@ -1508,10 +1508,10 @@ libs:
   - test/core/util/tracer_util.cc
   - test/core/util/trickle_endpoint.cc
   deps:
-  - grpc_unsecure
+  - absl/debugging:failure_signal_handler
   - absl/debugging:stacktrace
   - absl/debugging:symbolize
-  - absl/debugging:failure_signal_handler
+  - grpc_unsecure
 - name: grpc_unsecure
   build: all
   language: c
@@ -2050,12 +2050,12 @@ libs:
   - src/core/lib/uri/uri_parser.cc
   - src/core/plugin_registry/grpc_unsecure_plugin_registry.cc
   deps:
-  - gpr
   - absl/container:flat_hash_map
   - absl/container:inlined_vector
   - absl/status:statusor
-  - upb
+  - gpr
   - address_sorting
+  - upb
   baselib: true
   generate_plugin_registry: true
 - name: benchmark_helpers
@@ -2072,8 +2072,8 @@ libs:
   - src/proto/grpc/testing/simple_messages.proto
   - test/cpp/microbenchmarks/helpers.cc
   deps:
-  - grpc++_unsecure
   - benchmark
+  - grpc++_unsecure
   - grpc_test_util_unsecure
   - grpc++_test_config
   defaults: benchmark
@@ -2394,8 +2394,8 @@ libs:
   src:
   - test/cpp/util/test_config_cc.cc
   deps:
-  - gpr
   - absl/flags:parse
+  - gpr
 - name: grpc++_test_util
   build: private
   language: c++
@@ -2418,9 +2418,9 @@ libs:
   - test/cpp/util/subprocess.cc
   - test/cpp/util/test_credentials_provider.cc
   deps:
+  - absl/flags:flag
   - grpc++
   - grpc_test_util
-  - absl/flags:flag
 - name: grpc++_unsecure
   build: all
   language: c++
@@ -4110,8 +4110,8 @@ targets:
   - test/core/tsi/alts/fake_handshaker/fake_handshaker_server.cc
   - test/core/tsi/alts/handshaker/alts_concurrent_connectivity_test.cc
   deps:
-  - grpc_test_util
   - grpc++
+  - grpc_test_util
   platforms:
   - linux
   - posix
@@ -4123,9 +4123,9 @@ targets:
   - test/core/security/alts_credentials_fuzzer.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/security/corpus/alts_credentials_corpus
   maxlen: 2048
@@ -4476,8 +4476,8 @@ targets:
   src:
   - test/cpp/microbenchmarks/bm_fullstack_trickle.cc
   deps:
-  - benchmark_helpers
   - absl/flags:flag
+  - benchmark_helpers
   benchmark: true
   defaults: benchmark
   platforms:
@@ -4767,9 +4767,9 @@ targets:
   - test/core/end2end/fuzzers/client_fuzzer.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/end2end/fuzzers/client_fuzzer_corpus
   dict: test/core/end2end/fuzzers/hpack.dictionary
@@ -5113,8 +5113,8 @@ targets:
   - test/cpp/util/proto_reflection_descriptor_database.cc
   - test/cpp/util/service_describer.cc
   deps:
-  - grpc++
   - absl/flags:flag
+  - grpc++
   - grpc++_test_config
 - name: grpc_cpp_plugin
   build: protoc
@@ -5321,9 +5321,9 @@ targets:
   - test/core/transport/chttp2/hpack_parser_fuzzer_test.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/transport/chttp2/hpack_parser_corpus
   dict: test/core/end2end/fuzzers/hpack.dictionary
@@ -5349,9 +5349,9 @@ targets:
   - test/core/http/request_fuzzer.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/http/request_corpus
   maxlen: 2048
@@ -5363,9 +5363,9 @@ targets:
   - test/core/http/response_fuzzer.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/http/response_corpus
   maxlen: 2048
@@ -5449,8 +5449,8 @@ targets:
   - test/cpp/interop/interop_server_bootstrap.cc
   - test/cpp/interop/server_helper.cc
   deps:
-  - grpc++_test_util
   - grpc++_test_config
+  - grpc++_test_util
 - name: interop_test
   build: test
   language: c++
@@ -5472,9 +5472,9 @@ targets:
   - test/core/json/fuzzer.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/json/corpus
   maxlen: 512
@@ -5593,9 +5593,9 @@ targets:
   - test/core/nanopb/fuzzer_response.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/nanopb/corpus_response
   maxlen: 128
@@ -5607,9 +5607,9 @@ targets:
   - test/core/nanopb/fuzzer_serverlist.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/nanopb/corpus_serverlist
   maxlen: 128
@@ -5666,9 +5666,9 @@ targets:
   - test/core/slice/percent_decode_fuzzer.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/slice/percent_decode_corpus
   maxlen: 32
@@ -5680,9 +5680,9 @@ targets:
   - test/core/slice/percent_encode_fuzzer.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/slice/percent_encode_corpus
   maxlen: 32
@@ -5987,9 +5987,9 @@ targets:
   - test/core/end2end/fuzzers/server_fuzzer.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/end2end/fuzzers/server_fuzzer_corpus
   dict: test/core/end2end/fuzzers/hpack.dictionary
@@ -6108,9 +6108,9 @@ targets:
   - test/core/security/ssl_server_fuzzer.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/security/corpus/ssl_server_corpus
   maxlen: 2048
@@ -6364,9 +6364,9 @@ targets:
   - test/core/uri/uri_fuzzer_test.cc
   - test/core/util/fuzzer_corpus_test.cc
   deps:
+  - absl/flags:flag
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
   corpus_dirs:
   - test/core/uri/uri_corpus
   maxlen: 128
@@ -6458,10 +6458,10 @@ targets:
   - test/core/util/trickle_endpoint.cc
   - test/cpp/performance/writes_per_rpc_test.cc
   deps:
-  - grpc++
+  - absl/debugging:failure_signal_handler
   - absl/debugging:stacktrace
   - absl/debugging:symbolize
-  - absl/debugging:failure_signal_handler
+  - grpc++
   platforms:
   - linux
   - posix
@@ -6701,10 +6701,10 @@ targets:
   - src/proto/grpc/testing/test.proto
   - test/cpp/interop/xds_interop_client.cc
   deps:
+  - absl/flags:flag
   - grpc++
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
 - name: xds_interop_server
   build: test
   run: false
@@ -6716,8 +6716,8 @@ targets:
   - src/proto/grpc/testing/test.proto
   - test/cpp/interop/xds_interop_server.cc
   deps:
+  - absl/flags:flag
   - grpc++
   - grpc_test_util
   - grpc++_test_config
-  - absl/flags:flag
 tests: []
