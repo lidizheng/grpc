@@ -81,7 +81,7 @@ inline bool UnderFraction(const uint32_t numerator,
   const uint32_t random_number = rand() % denominator;
   if (GRPC_TRACE_FLAG_ENABLED(grpc_fault_injection_filter_trace)) {
     gpr_log(GPR_INFO,
-            "random=%zu %zu/%zu", random_number, numerator, denominator);
+            "random=%u %u/%u", random_number, numerator, denominator);
   }
   return random_number < numerator;
 }
