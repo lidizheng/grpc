@@ -1708,6 +1708,9 @@ def test_fault_injection(gcp, original_backend_service, instance_group):
     try:
         for (testcase_name, client_config, expected_results) in test_cases:
             logger.info('starting case %s', testcase_name)
+            if 'half' not in testcase_name:
+                logger.info('skip %s', testcase_name)
+                continue
 
             client_config['metadata'] = [
                 (messages_pb2.ClientConfigureRequest.RpcType.UNARY_CALL,
