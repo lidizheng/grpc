@@ -19,6 +19,7 @@
 #include "src/core/ext/filters/fault_injection/fault_injection_filter.h"
 
 #include "absl/strings/numbers.h"
+#include "absl/strings/str_format.h"
 
 #include <grpc/support/alloc.h>
 #include <grpc/support/log.h>
@@ -79,6 +80,10 @@ inline bool UnderFraction(const uint32_t numerator,
   // Generate a random number in [0, denominator).
   const uint32_t random_number = rand() % denominator;
   return random_number < numerator;
+}
+
+inline std::string FormatFraction(const uint32_t numerator, const uint32_t denominator) {
+  return absl::StrFormat("%.2f%%", static_cast<float>(numerator)/static_cast<float>(denominator)*100);
 }
 
 class ChannelData {
@@ -261,9 +266,11 @@ void CallData::StartTransportStreamOpBatch(
         batch->payload->send_initial_metadata.send_initial_metadata);
     if (GRPC_TRACE_FLAG_ENABLED(grpc_fault_injection_filter_trace)) {
       gpr_log(GPR_INFO,
-              "chand=%p calld=%p: Fault injection triggered delay=%d abort=%d",
+              "chand=%p calld=%p: Fault injection triggered delay=%d abort=%d with percentage delay=%s abort=%s",
               elem->channel_data, calld, calld->delay_request_,
-              calld->abort_request_);
+              calld->abort_request_,
+              FormatFraction(calld->fi_policy_->delay_percentage_numerator, calld->fi_policy_->delay_percentage_denominator).c_str(),
+              FormatFraction(calld->fi_policy_->abort_percentage_numerator, calld->fi_policy_->abort_percentage_denominator).c_str());
     }
     if (calld->MaybeDelay()) {
       // Delay the batch, and pass down the batch in the scheduled closure.
