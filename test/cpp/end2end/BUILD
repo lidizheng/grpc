@@ -547,6 +547,8 @@ grpc_cc_test(
         "@envoy_api//envoy/config/listener/v3:pkg_cc_proto",
         "@envoy_api//envoy/config/route/v3:pkg_cc_proto",
         "@envoy_api//envoy/extensions/clusters/aggregate/v3:pkg_cc_proto",
+        "@envoy_api//envoy/extensions/filters/common/fault/v3:pkg_cc_proto",
+        "@envoy_api//envoy/extensions/filters/http/fault/v3:pkg_cc_proto",
         "@envoy_api//envoy/extensions/filters/http/router/v3:pkg_cc_proto",
         "@envoy_api//envoy/extensions/filters/network/http_connection_manager/v3:pkg_cc_proto",
         "@envoy_api//envoy/extensions/transport_sockets/tls/v3:pkg_cc_proto",
@@ -554,8 +556,6 @@ grpc_cc_test(
         "@envoy_api//envoy/service/discovery/v3:pkg_cc_grpc",
         "@envoy_api//envoy/service/load_stats/v2:pkg_cc_grpc",
         "@envoy_api//envoy/service/load_stats/v3:pkg_cc_grpc",
-        "@envoy_api//envoy/extensions/filters/http/fault/v3:pkg_cc_proto",
-        "@envoy_api//envoy/extensions/filters/common/fault/v3:pkg_cc_proto",
     ],
 )
 
