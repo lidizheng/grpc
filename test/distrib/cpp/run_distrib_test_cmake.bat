@@ -66,9 +66,7 @@ popd
 
 @rem Just before installing gRPC, wipe out contents of all the submodules to simulate
 @rem a standalone build from an archive
-@rem TODO(lidiz) re-enable it once we include the xDS protos in our release
-@rem archive.
-@rem git submodule deinit --all --force
+git submodule deinit --all --force
 
 @rem Install gRPC
 mkdir cmake\build

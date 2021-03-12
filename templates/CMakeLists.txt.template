@@ -27,17 +27,11 @@
   proto_re = re.compile('(.*)\\.proto')
   lib_map = {lib.name: lib for lib in libs}
 
-  third_party_proto_prefixs = [
-    "third_party/envoy-api/",
-    "third_party/googleapis/",
-    "third_party/udpa/",
-    "third_party/protoc-gen-validate/",
-    "third_party/opencensus-proto/src/",
-  ]
+  third_party_proto_prefixes = {lib.proto_prefix for lib in external_libraries}
 
   def third_party_proto_import_path(path):
     """Removes third_party prefix to match ProtoBuf's relative import path."""
-    for prefix in third_party_proto_prefixs:
+    for prefix in third_party_proto_prefixes:
       if path.startswith(prefix):
         return path[len(prefix):]
     return path
@@ -337,6 +331,19 @@
   include(cmake/upb.cmake)
   include(cmake/xxhash.cmake)
   include(cmake/zlib.cmake)
+  include(cmake/xds_proto.cmake)
+
+  % for external_library in external_libraries:
+  # Setup external proto libraray at ${external_library.destination}
+  if (NOT EXISTS <%text>${CMAKE_CURRENT_SOURCE_DIR}</%text>/${external_library.destination})
+    fetch_check_extract(
+      <%text>${CMAKE_CURRENT_SOURCE_DIR}</%text>/${external_library.destination}
+      ${external_library.url}
+      ${external_library.hash}
+      ${external_library.strip_prefix}
+    )
+  endif()
+  % endfor
 
   if(_gRPC_PLATFORM_MAC OR _gRPC_PLATFORM_IOS)
     set(_gRPC_ALLTARGETS_LIBRARIES <%text>${CMAKE_DL_LIBS}</%text> m pthread)

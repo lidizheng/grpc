@@ -256,6 +256,53 @@ include(cmake/ssl.cmake)
 include(cmake/upb.cmake)
 include(cmake/xxhash.cmake)
 include(cmake/zlib.cmake)
+include(cmake/xds_proto.cmake)
+
+# Setup external proto libraray at third_party/envoy-api
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/envoy-api)
+  fetch_check_extract(
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/envoy-api
+    https://github.com/envoyproxy/data-plane-api/archive/18b54850c9b7ba29a4ab67cbd7ed7eab7b0bbdb2.tar.gz
+    4423bef0ab15053dca0f723cbdaf4b48ab145e9d8158f02e33028c66fb1d20e0
+    data-plane-api-18b54850c9b7ba29a4ab67cbd7ed7eab7b0bbdb2
+  )
+endif()
+# Setup external proto libraray at third_party/googleapis
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleapis)
+  fetch_check_extract(
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleapis
+    https://github.com/googleapis/googleapis/archive/82944da21578a53b74e547774cf62ed31a05b841.tar.gz
+    a45019af4d3290f02eaeb1ce10990166978c807cb33a9692141a076ba46d1405
+    googleapis-82944da21578a53b74e547774cf62ed31a05b841
+  )
+endif()
+# Setup external proto libraray at third_party/opencensus-proto
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/opencensus-proto)
+  fetch_check_extract(
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/opencensus-proto
+    https://github.com/census-instrumentation/opencensus-proto/archive/v0.3.0.tar.gz
+    b7e13f0b4259e80c3070b583c2f39e53153085a6918718b1c710caf7037572b0
+    opencensus-proto-0.3.0/src
+  )
+endif()
+# Setup external proto libraray at third_party/protoc-gen-validate
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/protoc-gen-validate)
+  fetch_check_extract(
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/protoc-gen-validate
+    https://github.com/envoyproxy/protoc-gen-validate/archive/278964a8052f96a2f514add0298098f63fb7f47f.tar.gz
+    e368733c9fb7f8489591ffaf269170d7658cc0cd1ee322b601512b769446d3c8
+    protoc-gen-validate-278964a8052f96a2f514add0298098f63fb7f47f
+  )
+endif()
+# Setup external proto libraray at third_party/udpa
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/udpa)
+  fetch_check_extract(
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/udpa
+    https://github.com/cncf/udpa/archive/cc1b757b3eddccaaaf0743cbb107742bb7e3ee4f.tar.gz
+    822a007cf155855d0c08a2e753a39e222e5816b904436196244066a818a8a230
+    udpa-cc1b757b3eddccaaaf0743cbb107742bb7e3ee4f
+  )
+endif()
 
 if(_gRPC_PLATFORM_MAC OR _gRPC_PLATFORM_IOS)
   set(_gRPC_ALLTARGETS_LIBRARIES ${CMAKE_DL_LIBS} m pthread)

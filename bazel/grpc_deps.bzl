@@ -318,6 +318,16 @@ def grpc_deps():
             ],
         )
 
+    if "com_github_cncf_udpa" not in native.existing_rules():
+        http_archive(
+            name = "com_github_cncf_udpa",
+            sha256 = "822a007cf155855d0c08a2e753a39e222e5816b904436196244066a818a8a230",
+            strip_prefix = "udpa-cc1b757b3eddccaaaf0743cbb107742bb7e3ee4f",
+            urls = [
+                "https://github.com/cncf/udpa/archive/cc1b757b3eddccaaaf0743cbb107742bb7e3ee4f.tar.gz",
+            ],
+        )
+
     if "io_bazel_rules_go" not in native.existing_rules():
         http_archive(
             name = "io_bazel_rules_go",
