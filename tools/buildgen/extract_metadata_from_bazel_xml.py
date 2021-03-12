@@ -298,7 +298,7 @@ def _compute_transitive_metadata(
     direct_deps = _extract_deps(bazel_rule, bazel_rules)
     transitive_deps = []
     # We care about the order of dependencies list, so it will be a list.
-    collapsed_deps = []
+    collapsed_deps = set()
     # We don't care about the order of srcs and headers, they will be sorted.
     collapsed_srcs = set(_extract_sources(bazel_rule))
     collapsed_public_headers = set(_extract_public_headers(bazel_rule))
@@ -320,14 +320,15 @@ def _compute_transitive_metadata(
                 _deduplicate_append(
                     transitive_deps,
                     bazel_rules[dep].get('_TRANSITIVE_DEPS', []))
-                _deduplicate_append(collapsed_deps,
-                                    bazel_rules[dep].get('_COLLAPSED_DEPS', []))
+                collapsed_deps.update(
+                    collapsed_deps, bazel_rules[dep].get('_COLLAPSED_DEPS', []))
                 exclude_deps.update(bazel_rules[dep].get('_EXCLUDE_DEPS', []))
 
         # This dep is a public target, add it as a dependency
         if dep in bazel_label_to_dep_name:
             _deduplicate_append(transitive_deps, [bazel_label_to_dep_name[dep]])
-            _deduplicate_append(collapsed_deps, [bazel_label_to_dep_name[dep]])
+            collapsed_deps.update(collapsed_deps,
+                                  [bazel_label_to_dep_name[dep]])
             # Add all the transitive deps of our every public dep to exclude
             # list since we want to avoid building sources that are already
             # built our dependencies
@@ -338,7 +339,7 @@ def _compute_transitive_metadata(
         # This dep is an external target, add it as a dependency
         if external_dep_name_maybe is not None:
             _deduplicate_append(transitive_deps, [external_dep_name_maybe])
-            _deduplicate_append(collapsed_deps, [external_dep_name_maybe])
+            collapsed_deps.update(collapsed_deps, [external_dep_name_maybe])
             continue
 
     # Direct dependencies are part of transitive dependencies
