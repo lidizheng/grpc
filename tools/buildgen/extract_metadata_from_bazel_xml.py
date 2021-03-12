@@ -278,8 +278,9 @@ def _compute_transitive_metadata(
                         possible dependency list in alphabetical order;
     * _COLLAPSED_SRCS:  the merged source files;
     * _COLLAPSED_PUBLIC_HEADERS: the merged public headers;
-    * _COLLAPSED_HEADERS: the merged non-public headers.
-    * _EXCLUDE_DEPS: the intermediate dependency labels.
+    * _COLLAPSED_HEADERS: the merged non-public headers;
+    * _EXCLUDE_DEPS: transitive dependencies of public deps that this build
+      target depends on, and they will be excluded in the final build metadata.
 
     For the collapsed_deps, the algorithm improved cases like:
 
@@ -327,6 +328,9 @@ def _compute_transitive_metadata(
         if dep in bazel_label_to_dep_name:
             _deduplicate_append(transitive_deps, [bazel_label_to_dep_name[dep]])
             _deduplicate_append(collapsed_deps, [bazel_label_to_dep_name[dep]])
+            # Add all the transitive deps of our every public dep to exclude
+            # list since we want to avoid building sources that are already
+            # built our dependencies
             exclude_deps.update(bazel_rules[dep]['_TRANSITIVE_DEPS'])
             exclude_deps.add(dep)
             continue
@@ -340,27 +344,30 @@ def _compute_transitive_metadata(
     # Direct dependencies are part of transitive dependencies
     _deduplicate_append(transitive_deps, direct_deps)
 
-    # Removes all duplicated intermediate labels.
-    # This is the step that further shorten the deps list.
+    # Remove intermediate targets that our public dependencies already depend
+    # on. This is the step that further shorten the deps list.
     collapsed_deps = list(
         filter(lambda x: x not in exclude_deps, collapsed_deps))
 
     # Compute the final source files and headers for this build target whose
     # name is `rule_name` (input argument of this function).
     #
-    # Imaging a build target X has transitive deps [A, B, C, D, E]. C and E are
-    # public build targets. And D is a transitive dependency of C.
+    # Imaging a public target PX has transitive deps [IA, IB, PY, IC, PZ]. PX,
+    # PY and PZ are public build targets. And IA, IB, IC are intermediate
+    # targets. In addition, PY depends on IC.
     #
     # Translate the condition into dependency graph:
-    #   X -> [A, B, C, D, E]
-    #   C -> [D]
-    #   Public targets [X, C, E]
+    #   PX -> [IA, IB, PY, IC, PZ]
+    #   PY -> [IC]
+    #   Public targets: [PX, PY, PZ]
     #
-    # The collapsed dependencies of X: [C, E].
-    # The excluded dependencies of X: [C, D, E].
+    # The collapsed dependencies of PX: [PY, PZ].
+    # The excluded dependencies of X: [PY, IC, PZ].
+    # (IC is excluded as a dependency of PX. It is already included in PY, hence
+    # it would be redundant to include it again.)
     #
-    # Target X should include source files and headers of [X, A, B] as final
-    # build.
+    # Target PX should include source files and headers of [PX, IA, IB] as final
+    # build metadata.
     for dep in transitive_deps:
         if dep not in exclude_deps:
             if dep in bazel_rules:
