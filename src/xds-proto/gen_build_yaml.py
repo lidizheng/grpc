@@ -55,7 +55,7 @@ EXTERNAL_PROTO_LIBRARIES = {
         ExternalProtoLibrary(destination='third_party/protoc-gen-validate',
                              proto_prefix='third_party/protoc-gen-validate/'),
     'opencensus_proto':
-        ExternalProtoLibrary(destination='third_party/opencensus-proto',
+        ExternalProtoLibrary(destination='third_party/opencensus-proto/src',
                              proto_prefix='third_party/opencensus-proto/src/'),
 }
 

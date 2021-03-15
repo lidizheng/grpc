@@ -276,10 +276,10 @@ if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/googleapis)
     googleapis-82944da21578a53b74e547774cf62ed31a05b841
   )
 endif()
-# Setup external proto libraray at third_party/opencensus-proto
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/opencensus-proto)
+# Setup external proto libraray at third_party/opencensus-proto/src
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/opencensus-proto/src)
   fetch_check_extract(
-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/opencensus-proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/opencensus-proto/src
     https://storage.googleapis.com/grpc-bazel-mirror/github.com/census-instrumentation/opencensus-proto/archive/v0.3.0.tar.gz
     b7e13f0b4259e80c3070b583c2f39e53153085a6918718b1c710caf7037572b0
     opencensus-proto-0.3.0/src

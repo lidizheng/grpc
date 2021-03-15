@@ -28,6 +28,7 @@ function(fetch_check_extract destination url hash strip_prefix)
                   ${CMAKE_COMMAND} -E tar xvf ${TEMPORARY_FILE}
                   WORKING_DIRECTORY ${TEMPORARY_DIR}
                   OUTPUT_QUIET)
+  file(MAKE_DIRECTORY ${destination})
   file(RENAME ${TEMPORARY_DIR}/${strip_prefix} ${destination})
   # Clean up
   file(REMOVE ${TEMPORARY_DIR}/${strip_prefix})
