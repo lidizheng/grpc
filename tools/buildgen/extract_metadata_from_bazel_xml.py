@@ -38,29 +38,11 @@ import collections
 import sys
 import re
 from typing import List, Any, Dict, Optional, Iterable
-
 import build_cleaner
-
-PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
-                            '..')
-os.chdir(PROJECT_ROOT)
 
 BuildMetadata = Dict[str, Any]
 BuildDict = Dict[str, BuildMetadata]
 BuildYaml = Dict[str, Any]
-
-# Map from the external repository's labels to their path prefixes.
-EXTERNAL_LIB_LABEL_PATH_MAP = dict(
-    envoy_api='third_party/envoy-api/',
-    com_google_googleapis='third_party/googleapis/',
-    com_github_cncf_udpa='third_party/udpa/',
-    com_envoyproxy_protoc_gen_validate='third_party/protoc-gen-validate/',
-    opencensus_proto='third_party/opencensus-proto/src/')
-# The external repositories that we are currently able to support the metadata
-# extraction. We aim to support arbitrary external libraries in the long term.
-# This variable should be removed eventually.
-RE_MATCH_SUPPORTED_EXTERNAL_LIBS = re.compile(
-    f'^@({"|".join(EXTERNAL_LIB_LABEL_PATH_MAP.keys())}).*$')
 
 
 def _bazel_query_xml_tree(query: str) -> ET.Element:
@@ -112,7 +94,7 @@ def _extract_rules_from_bazel_xml(xml_tree):
             rule_name = rule_dict['name']
             if rule_clazz in [
                     'cc_library', 'cc_binary', 'cc_test', 'cc_proto_library',
-                    'proto_library', 'cc_proto_gen_validate'
+                    'proto_library'
             ]:
                 if rule_name in result:
                     raise Exception('Rule %s already present' % rule_name)
@@ -121,8 +103,6 @@ def _extract_rules_from_bazel_xml(xml_tree):
 
 
 def _get_bazel_label(target_name: str) -> str:
-    if target_name.startswith('@'):
-        return target_name
     if ':' in target_name:
         return '//%s' % target_name
     else:
@@ -163,43 +143,17 @@ def _extract_nonpublic_headers(bazel_rule: BuildMetadata) -> List[str]:
 def _extract_sources(bazel_rule: BuildMetadata) -> List[str]:
     """Gets list of source files from a bazel rule"""
     result = []
-    for src in bazel_rule['srcs']:
-        if src.endswith('.cc') or src.endswith('.c') or src.endswith('.proto'):
-            if src.startswith('//'):
-                # This source file is local to gRPC
-                result.append(_extract_source_file_path(src))
-            elif RE_MATCH_SUPPORTED_EXTERNAL_LIBS.match(src):
-                # This source file is external, and we need to translate the
-                # @REPO_NAME to a valid path prefix. At this stage, we need
-                # to check repo name, since the label/path mapping is not
-                # available in BUILD files.
-                external_library_name = RE_MATCH_SUPPORTED_EXTERNAL_LIBS.match(
-                    src).group(1)
-                result.append(
-                    src.replace(
-                        f"@{external_library_name}//",
-                        EXTERNAL_LIB_LABEL_PATH_MAP[external_library_name]).
-                    replace(':', "/"))
-            else:
-                # We don't know how to map these labels to a concrete source
-                # file path, so let's skip them.
-                pass
+    for dep in bazel_rule['srcs']:
+        if dep.startswith('//') and (dep.endswith('.cc') or dep.endswith('.c')
+                                     or dep.endswith('.proto')):
+            result.append(_extract_source_file_path(dep))
     return list(sorted(result))
 
 
 def _extract_deps(bazel_rule: BuildMetadata,
                   bazel_rules: BuildDict) -> List[str]:
     """Gets list of deps from from a bazel rule"""
-    deps = set(bazel_rule['deps'])
-    for src in bazel_rule['srcs']:
-        if not src.endswith('.cc') and not src.endswith(
-                '.c') and not src.endswith('.proto'):
-            if src in bazel_rules:
-                # This label doesn't point to a source file, but another Bazel
-                # target. This is required for :pkg_cc_proto_validate targets,
-                # and it's generally allowed by Bazel.
-                deps.add(src)
-    return list(sorted(list(deps)))
+    return list(sorted(bazel_rule['deps']))
 
 
 def _create_target_from_bazel_rule(target_name: str,
@@ -244,17 +198,6 @@ def _external_dep_name_from_bazel_dependency(bazel_dep: str) -> Optional[str]:
         return None
 
 
-def _deduplicate_append(target: List[str], pending: List[str]) -> None:
-    """Append the list without duplicated items in place.
-    
-    Expected to be used to create a order-stable dependency list.
-    """
-    seen = set(target)
-    for dep in pending:
-        if dep not in seen:
-            target.append(dep)
-
-
 def _compute_transitive_metadata(
         rule_name: str, bazel_rules: Any,
         bazel_label_to_dep_name: Dict[str, str]) -> None:
@@ -279,8 +222,8 @@ def _compute_transitive_metadata(
     * _COLLAPSED_SRCS:  the merged source files;
     * _COLLAPSED_PUBLIC_HEADERS: the merged public headers;
     * _COLLAPSED_HEADERS: the merged non-public headers;
-    * _EXCLUDE_DEPS: transitive dependencies of public deps that this build
-      target depends on, and they will be excluded in the final build metadata.
+    * _EXCLUDE_DEPS: intermediate targets to exclude when performing collapsing
+      of sources and dependencies. 
 
     For the collapsed_deps, the algorithm improved cases like:
 
@@ -296,59 +239,58 @@ def _compute_transitive_metadata(
     """
     bazel_rule = bazel_rules[rule_name]
     direct_deps = _extract_deps(bazel_rule, bazel_rules)
-    transitive_deps = []
-    # We care about the order of dependencies list, so it will be a list.
+    transitive_deps = set()
     collapsed_deps = set()
-    # We don't care about the order of srcs and headers, they will be sorted.
+    exclude_deps = set()
     collapsed_srcs = set(_extract_sources(bazel_rule))
     collapsed_public_headers = set(_extract_public_headers(bazel_rule))
     collapsed_headers = set(_extract_nonpublic_headers(bazel_rule))
-    exclude_deps = set()
 
     for dep in direct_deps:
         external_dep_name_maybe = _external_dep_name_from_bazel_dependency(dep)
 
         if dep in bazel_rules:
-            # Suppress expanding absl libs; expanding absl deps are technically
-            # correct but creates too much noise
-            if external_dep_name_maybe is None or not external_dep_name_maybe.startswith(
-                    'absl'):
+            # Descend recursively, but no need to do that for external deps
+            if external_dep_name_maybe is None:
                 if "_PROCESSING_DONE" not in bazel_rules[dep]:
                     # This item is not processed before, compute now
                     _compute_transitive_metadata(dep, bazel_rules,
                                                  bazel_label_to_dep_name)
-                _deduplicate_append(
-                    transitive_deps,
-                    bazel_rules[dep].get('_TRANSITIVE_DEPS', []))
+
+                transitive_deps.update(bazel_rules[dep].get(
+                    '_TRANSITIVE_DEPS', []))
                 collapsed_deps.update(
                     collapsed_deps, bazel_rules[dep].get('_COLLAPSED_DEPS', []))
                 exclude_deps.update(bazel_rules[dep].get('_EXCLUDE_DEPS', []))
 
         # This dep is a public target, add it as a dependency
         if dep in bazel_label_to_dep_name:
-            _deduplicate_append(transitive_deps, [bazel_label_to_dep_name[dep]])
+            transitive_deps.update([bazel_label_to_dep_name[dep]])
             collapsed_deps.update(collapsed_deps,
                                   [bazel_label_to_dep_name[dep]])
             # Add all the transitive deps of our every public dep to exclude
             # list since we want to avoid building sources that are already
-            # built our dependencies
+            # built by our dependencies
             exclude_deps.update(bazel_rules[dep]['_TRANSITIVE_DEPS'])
-            exclude_deps.add(dep)
             continue
 
         # This dep is an external target, add it as a dependency
         if external_dep_name_maybe is not None:
-            _deduplicate_append(transitive_deps, [external_dep_name_maybe])
+            transitive_deps.update([external_dep_name_maybe])
             collapsed_deps.update(collapsed_deps, [external_dep_name_maybe])
             continue
 
     # Direct dependencies are part of transitive dependencies
-    _deduplicate_append(transitive_deps, direct_deps)
+    transitive_deps.update(direct_deps)
+
+    # Calculate transitive public deps (needed for collapsing sources)
+    transitive_public_deps = set(
+        filter(lambda x: x in bazel_label_to_dep_name, transitive_deps))
 
     # Remove intermediate targets that our public dependencies already depend
     # on. This is the step that further shorten the deps list.
-    collapsed_deps = list(
-        filter(lambda x: x not in exclude_deps, collapsed_deps))
+    collapsed_deps = set(filter(lambda x: x not in exclude_deps,
+                                collapsed_deps))
 
     # Compute the final source files and headers for this build target whose
     # name is `rule_name` (input argument of this function).
@@ -370,7 +312,7 @@ def _compute_transitive_metadata(
     # Target PX should include source files and headers of [PX, IA, IB] as final
     # build metadata.
     for dep in transitive_deps:
-        if dep not in exclude_deps:
+        if dep not in exclude_deps and dep not in transitive_public_deps:
             if dep in bazel_rules:
                 collapsed_srcs.update(_extract_sources(bazel_rules[dep]))
                 collapsed_public_headers.update(
@@ -381,7 +323,7 @@ def _compute_transitive_metadata(
     # This item is a "visited" flag
     bazel_rule['_PROCESSING_DONE'] = True
     # Following items are described in the docstinrg.
-    bazel_rule['_TRANSITIVE_DEPS'] = transitive_deps
+    bazel_rule['_TRANSITIVE_DEPS'] = list(sorted(transitive_deps))
     bazel_rule['_COLLAPSED_DEPS'] = list(sorted(collapsed_deps))
     bazel_rule['_COLLAPSED_SRCS'] = list(sorted(collapsed_srcs))
     bazel_rule['_COLLAPSED_PUBLIC_HEADERS'] = list(
