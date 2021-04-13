@@ -64,7 +64,7 @@ bazel build //src/python/grpcio_tests/tests_py3_only/interop:xds_interop_client
 # because not all interop clients in all languages support these new tests.
 GRPC_VERBOSITY=debug GRPC_TRACE=xds_client,xds_resolver,xds_cluster_manager_lb,cds_lb,xds_cluster_resolver_lb,priority_lb,xds_cluster_impl_lb,weighted_target_lb "$PYTHON" \
   tools/run_tests/run_xds_tests.py \
-    --test_case="all,path_matching,header_matching,circuit_breaking,timeout" \
+    --test_case="all,circuit_breaking,timeout,fault_injection" \
     --project_id=grpc-testing \
     --project_num=830293263384 \
     --source_image=projects/grpc-testing/global/images/xds-test-server-4 \
@@ -72,4 +72,4 @@ GRPC_VERBOSITY=debug GRPC_TRACE=xds_client,xds_resolver,xds_cluster_manager_lb,c
     --gcp_suffix=$(date '+%s') \
     --verbose \
     ${XDS_V3_OPT-} \
-    --client_cmd='bazel run --test_env="PYTHONUNBUFFERED=true" //src/python/grpcio_tests/tests_py3_only/interop:xds_interop_client -- --server=xds:///{server_uri} --stats_port={stats_port} --qps={qps} --verbose {rpcs_to_send} {metadata_to_send}'
+    --client_cmd='bazel run --test_env="PYTHONUNBUFFERED=true" //src/python/grpcio_tests/tests_py3_only/interop:xds_interop_client -- --server=xds:///{server_uri} --stats_port={stats_port} --qps={qps} {rpcs_to_send} {metadata_to_send}'
