@@ -514,6 +514,10 @@ grpc_cc_test_xds(
     name = "xds_end2end_test",
     size = "large",
     srcs = ["xds_end2end_test.cc"],
+    args = [
+        '--gtest_filter=*Fault*',
+        '--gtest_break_on_failure',
+    ],
     data = [
         "//src/core/tsi/test_creds:badclient.key",
         "//src/core/tsi/test_creds:badclient.pem",
@@ -526,7 +530,7 @@ grpc_cc_test_xds(
     external_deps = [
         "gtest",
     ],
-    flaky = True,  # TODO(b/144705388)
+    # flaky = True,  # TODO(b/144705388)
     shard_count = 20,
     tags = [
         "no_test_ios",
