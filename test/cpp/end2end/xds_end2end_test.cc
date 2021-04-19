@@ -1632,7 +1632,8 @@ size_t ComputeIdealNumRpcs(double p, double error_tolerance) {
   GPR_ASSERT(p >= 0 && p <= 1);
   size_t num_rpcs =
       ceil(p * (1 - p) * 3.89 * 3.89 / error_tolerance / error_tolerance);
-  gpr_log(GPR_INFO, "sending %zu RPCs for percentage=%.3f error_tolerance=%.3f",
+  gpr_log(GPR_INFO,
+          "Sending %" PRIuPTR " RPCs for percentage=%.3f error_tolerance=%.3f",
           num_rpcs, p, error_tolerance);
   return num_rpcs;
 }
@@ -2513,13 +2514,13 @@ class XdsEnd2endTest : public ::testing::TestWithParam<TestType> {
     EchoResponse response;
   };
 
-  std::vector<std::unique_ptr<ConcurrentRpc>> SendConcurrentRpcs(
+  std::vector<ConcurrentRpc> SendConcurrentRpcs(
       grpc::testing::EchoTestService::Stub* stub, size_t num_rpcs,
       const RpcOptions& rpc_options) {
     // Variables for RPC.
     // Using unique_ptr here, because we can't copy ClientContext. We allocate
     // it on heap and let C++ handle its life cycle.
-    std::vector<std::unique_ptr<ConcurrentRpc>> rpcs;
+    std::vector<ConcurrentRpc> rpcs(num_rpcs);
     EchoRequest request;
     // Variables for synchronization
     absl::Mutex mu;
@@ -2527,8 +2528,7 @@ class XdsEnd2endTest : public ::testing::TestWithParam<TestType> {
     size_t completed = 0;
     // Set-off callback RPCs
     for (size_t i = 0; i < num_rpcs; i++) {
-      rpcs.push_back(absl::make_unique<ConcurrentRpc>());
-      ConcurrentRpc* rpc = rpcs.back().get();
+      ConcurrentRpc* rpc = &rpcs[i];
       rpc_options.SetupRpc(&rpc->context, &request);
       grpc_millis t0 = NowFromCycleCounter();
       stub->experimental_async()->Echo(
@@ -2536,15 +2536,12 @@ class XdsEnd2endTest : public ::testing::TestWithParam<TestType> {
           [rpc, &mu, &completed, &cv, num_rpcs, t0](Status s) {
             rpc->status = s;
             rpc->elapsed_time = NowFromCycleCounter() - t0;
-            mu.Lock();
-            if ((++completed) == num_rpcs) {
-              mu.Unlock();
-              // This wakes up another thread, if we don't unlock first, the
-              // mutex might go away before this thread can react.
-              cv.Signal();
-            } else {
-              mu.Unlock();
+            bool done;
+            {
+              absl::MutexLock lock(&mu);
+              done = (++completed) == num_rpcs;
             }
+            if (done) cv.Signal();
           });
     }
     {
@@ -10147,7 +10144,7 @@ TEST_P(FaultInjectionTest, XdsFaultInjectionPercentageAbortViaHeaders) {
 
 TEST_P(FaultInjectionTest, XdsFaultInjectionPercentageDelay) {
   const uint32_t kFixedDelaySeconds = 100;
-  const uint32_t kRpcTimeoutMilliseconds = 2000;  // 2s
+  const uint32_t kRpcTimeoutMilliseconds = 4000;  // 4s
   const uint32_t kDelayPercentagePerHundred = 50;
   const double kDelayRate = kDelayPercentagePerHundred / 100.0;
   const double kErrorTolerance = 0.05;
@@ -10173,12 +10170,12 @@ TEST_P(FaultInjectionTest, XdsFaultInjectionPercentageDelay) {
   RpcOptions rpc_options = RpcOptions()
                                .set_timeout_ms(kRpcTimeoutMilliseconds)
                                .set_skip_cancelled_check(true);
-  std::vector<std::unique_ptr<ConcurrentRpc>> rpcs =
+  std::vector<ConcurrentRpc> rpcs =
       SendConcurrentRpcs(stub_.get(), kNumRpcs, rpc_options);
   size_t num_delayed = 0;
   for (auto& rpc : rpcs) {
-    if (rpc->status.error_code() == grpc::OK) continue;
-    EXPECT_EQ(grpc::DEADLINE_EXCEEDED, rpc->status.error_code());
+    if (rpc.status.error_code() == grpc::OK) continue;
+    EXPECT_EQ(grpc::DEADLINE_EXCEEDED, rpc.status.error_code());
     ++num_delayed;
   }
   // The delay rate should be roughly equal to the expectation.
@@ -10189,7 +10186,7 @@ TEST_P(FaultInjectionTest, XdsFaultInjectionPercentageDelay) {
 
 TEST_P(FaultInjectionTest, XdsFaultInjectionPercentageDelayViaHeaders) {
   const uint32_t kFixedDelayMilliseconds = 100000;  // 100 seconds
-  const uint32_t kRpcTimeoutMilliseconds = 2000;    // 2s
+  const uint32_t kRpcTimeoutMilliseconds = 4000;    // 4s
   const uint32_t kDelayPercentageCap = 100;
   const uint32_t kDelayPercentage = 50;
   const double kDelayRate = kDelayPercentage / 100.0;
@@ -10220,12 +10217,12 @@ TEST_P(FaultInjectionTest, XdsFaultInjectionPercentageDelayViaHeaders) {
                                .set_metadata(metadata)
                                .set_timeout_ms(kRpcTimeoutMilliseconds)
                                .set_skip_cancelled_check(true);
-  std::vector<std::unique_ptr<ConcurrentRpc>> rpcs =
+  std::vector<ConcurrentRpc> rpcs =
       SendConcurrentRpcs(stub_.get(), kNumRpcs, rpc_options);
   size_t num_delayed = 0;
   for (auto& rpc : rpcs) {
-    if (rpc->status.error_code() == grpc::OK) continue;
-    EXPECT_EQ(grpc::DEADLINE_EXCEEDED, rpc->status.error_code());
+    if (rpc.status.error_code() == grpc::OK) continue;
+    EXPECT_EQ(grpc::DEADLINE_EXCEEDED, rpc.status.error_code());
     ++num_delayed;
   }
   // The delay rate should be roughly equal to the expectation.
@@ -10266,12 +10263,12 @@ TEST_P(FaultInjectionTest, XdsFaultInjectionAlwaysDelayPercentageAbort) {
   // Send kNumRpcs RPCs and count the aborts.
   int num_aborted = 0;
   RpcOptions rpc_options = RpcOptions().set_timeout_ms(kRpcTimeoutMilliseconds);
-  std::vector<std::unique_ptr<ConcurrentRpc>> rpcs =
+  std::vector<ConcurrentRpc> rpcs =
       SendConcurrentRpcs(stub_.get(), kNumRpcs, rpc_options);
   for (auto& rpc : rpcs) {
-    EXPECT_GE(rpc->elapsed_time, kFixedDelaySeconds * 1000);
-    if (rpc->status.error_code() == grpc::OK) continue;
-    EXPECT_EQ("Fault injected", rpc->status.error_message());
+    EXPECT_GE(rpc.elapsed_time, kFixedDelaySeconds * 1000);
+    if (rpc.status.error_code() == grpc::OK) continue;
+    EXPECT_EQ("Fault injected", rpc.status.error_message());
     ++num_aborted;
   }
   // The abort rate should be roughly equal to the expectation.
@@ -10316,12 +10313,12 @@ TEST_P(FaultInjectionTest,
   // Send kNumRpcs RPCs and count the aborts.
   int num_aborted = 0;
   RpcOptions rpc_options = RpcOptions().set_timeout_ms(kRpcTimeoutMilliseconds);
-  std::vector<std::unique_ptr<ConcurrentRpc>> rpcs =
+  std::vector<ConcurrentRpc> rpcs =
       SendConcurrentRpcs(stub_.get(), kNumRpcs, rpc_options);
   for (auto& rpc : rpcs) {
-    EXPECT_GE(rpc->elapsed_time, kFixedDelaySeconds * 1000);
-    if (rpc->status.error_code() == grpc::OK) continue;
-    EXPECT_EQ("Fault injected", rpc->status.error_message());
+    EXPECT_GE(rpc.elapsed_time, kFixedDelaySeconds * 1000);
+    if (rpc.status.error_code() == grpc::OK) continue;
+    EXPECT_EQ("Fault injected", rpc.status.error_message());
     ++num_aborted;
   }
   // The abort rate should be roughly equal to the expectation.
@@ -10333,7 +10330,7 @@ TEST_P(FaultInjectionTest,
 TEST_P(FaultInjectionTest, XdsFaultInjectionMaxFault) {
   const uint32_t kMaxFault = 10;
   const uint32_t kNumRpcs = 30;  // kNumRpcs should be bigger than kMaxFault
-  const uint32_t kRpcTimeoutMs = 1000;     // 1 seconds
+  const uint32_t kRpcTimeoutMs = 4000;     // 4 seconds
   const uint32_t kLongDelaySeconds = 100;  // 100 seconds
   const uint32_t kAlwaysDelayPercentage = 100;
   SetNextResolution({});
@@ -10359,11 +10356,11 @@ TEST_P(FaultInjectionTest, XdsFaultInjectionMaxFault) {
   // active faults quota.
   int num_delayed = 0;
   RpcOptions rpc_options = RpcOptions().set_timeout_ms(kRpcTimeoutMs);
-  std::vector<std::unique_ptr<ConcurrentRpc>> rpcs =
+  std::vector<ConcurrentRpc> rpcs =
       SendConcurrentRpcs(stub_.get(), kNumRpcs, rpc_options);
   for (auto& rpc : rpcs) {
-    if (rpc->status.error_code() == grpc::OK) continue;
-    EXPECT_EQ(StatusCode::DEADLINE_EXCEEDED, rpc->status.error_code());
+    if (rpc.status.error_code() == grpc::OK) continue;
+    EXPECT_EQ(StatusCode::DEADLINE_EXCEEDED, rpc.status.error_code());
     ++num_delayed;
   }
   // Only kMaxFault number of RPC should be fault injected..
