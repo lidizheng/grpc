@@ -142,7 +142,7 @@ main() {
   build_docker_images_if_needed
   # Run tests
   cd "${TEST_DRIVER_FULL_DIR}"
-  run_test baseline_test
+  # run_test baseline_test
   # [DO-NOT-MERGE] Test-only
   run_test url_map_tests
 }
