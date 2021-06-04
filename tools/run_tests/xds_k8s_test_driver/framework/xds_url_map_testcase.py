@@ -497,7 +497,7 @@ class XdsUrlMapTestCase(abc.ABC, absltest.TestCase):
                         if type(last_exception) != type(e) or str(
                                 last_exception) != str(e):
                             logging.exception(e)
-                            last_exception == e
+                            last_exception = e
                     else:
                         return
                 time.sleep(_URL_MAP_PROPAGATE_CHECK_INTERVAL_SEC)
