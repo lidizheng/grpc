@@ -479,6 +479,7 @@ class XdsUrlMapTestCase(abc.ABC, absltest.TestCase):
     def test_client_config(self):
         config = None
         json_config = None
+        last_exception = None
         deadline = time.time() + _URL_MAP_PROPAGATE_TIMEOUT_SEC
         while time.time() < deadline:
             try:
@@ -493,6 +494,10 @@ class XdsUrlMapTestCase(abc.ABC, absltest.TestCase):
                     except Exception as e:
                         logging.info('xDS config check failed: %s: %s', type(e),
                                      e)
+                        if type(last_exception) != type(e) or str(
+                                last_exception) != str(e):
+                            logging.exception(e)
+                            last_exception == e
                     else:
                         return
                 time.sleep(_URL_MAP_PROPAGATE_CHECK_INTERVAL_SEC)
@@ -521,6 +526,12 @@ class XdsUrlMapTestCase(abc.ABC, absltest.TestCase):
             'Received LoadBalancerStatsResponse from test client %s:\n%s',
             test_client.ip, json.dumps(json_lb_stats, indent=2))
         return RpcDistributionStats(json_lb_stats)
+
+    def assertNumEndpoints(self, xds_config: DumpedXdsConfig, k: int) -> None:
+        self.assertEqual(
+            k, len(xds_config.endpoints),
+            f'insufficient endpoints in EDS: want={k} seen={xds_config.endpoints}'
+        )
 
     def assertRpcStatusCode(self, test_client: XdsTestClient, *,
                             expected: Iterable[ExpectedResult], length: int,
