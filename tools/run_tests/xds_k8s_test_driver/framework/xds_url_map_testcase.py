@@ -443,6 +443,12 @@ class XdsUrlMapTestCase(abc.ABC, absltest.TestCase):
     def setUpClass(cls):
         cls.resource = _gcp_resource_manager
         cls.resource.ensure_setup()
+        # TODO(lidiz) technically, we should be able to create deployments for
+        # each individual test cases to allow them to be run concurrently.
+        # However, the framework uses workload identity to connect to TD. The
+        # workload identity requires IAM policy binding with (Kubernetes
+        # Namespace, Kubernetes Deployment, Kubernetes Workload). This demands
+        # admin permission.
         cls.resource.test_client_runner.cleanup(force=True)
         # Sending both RPCs when starting.
         cls.test_client = cls.resource.test_client_runner.run(
