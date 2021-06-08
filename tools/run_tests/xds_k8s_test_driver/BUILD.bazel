@@ -19,20 +19,33 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
+# TODO(lidiz) current ProtoBuf generated Python target always need to compile "grpcio" and "protobuf". It's not main reason
+py_library(
+    name = "_generated_test_protos",
+    srcs = glob(["src/proto/**/*.py"]),
+    imports = ["."],
+)
+
 py_library(
     name = "framework",
     srcs = glob(["framework/**/*.py"]),
     srcs_version = "PY3",
     data=glob(["kubernetes-manifests/*.yaml"]),
     deps = [
-        "//src/proto/grpc/testing:empty_py_pb2",
-        "//src/proto/grpc/testing:py_messages_proto",
-        "//src/proto/grpc/testing:test_py_pb2_grpc",
-        "//src/python/grpcio/grpc:grpcio",
-        "//src/python/grpcio_csds/grpc_csds",
-        "//src/python/grpcio_channelz/grpc_channelz/v1:grpc_channelz",
-        "//src/python/grpcio_health_checking/grpc_health/v1:grpc_health",
+        ":_generated_test_protos",
+        # "//src/proto/grpc/testing:empty_py_pb2",
+        # "//src/proto/grpc/testing:py_messages_proto",
+        # "//src/proto/grpc/testing:test_py_pb2_grpc",
+        # "//src/python/grpcio/grpc:grpcio",
+        # "//src/python/grpcio_csds/grpc_csds",
+        # "//src/python/grpcio_channelz/grpc_channelz/v1:grpc_channelz",
+        # "//src/python/grpcio_health_checking/grpc_health/v1:grpc_health",
         requirement("Mako"),
+        requirement("grpcio"),
+        requirement("grpcio-tools"),
+        requirement("grpcio-channelz"),
+        requirement("grpcio-csds"),
+        requirement("grpcio-health-checking"),
         requirement("PyYAML"),
         requirement("absl-py"),
         requirement("google-api-python-client"),
